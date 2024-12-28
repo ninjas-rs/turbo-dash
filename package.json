@@ -1,6 +1,6 @@
 {
-    "name": "eclipse-dash",
-    "description": "Eclipse Dash is a 2D Platformer Game",
+    "name": "turbo-dash",
+    "description": "Turbo Dash is a 2D Platformer Game",
     "version": "0.0.1",
     "main": "index.js",
     "scripts": {
