@@ -10,19 +10,18 @@ import { EventBus } from "./event-bus";
 
 interface IRefPhaserGame {
   game: Phaser.Game | null;
-  scene: Phaser.Scene | null;
 }
 
 interface IPropsPhaserGame {
   ref: RefObject<IRefPhaserGame | null>;
-  setCanMoveSprite: Dispatch<SetStateAction<boolean>>;
+  setScene: Dispatch<SetStateAction<Phaser.Scene | null>>;
 }
 
-const PhaserGame = ({ ref, setCanMoveSprite }: IPropsPhaserGame) => {
+const PhaserGame = ({ ref, setScene }: IPropsPhaserGame) => {
   useLayoutEffect(() => {
     if (ref.current === null) {
       const game = StartGame("game-container");
-      ref.current = { game: game, scene: null };
+      ref.current = { game };
     }
 
     return () => {
@@ -38,13 +37,10 @@ const PhaserGame = ({ ref, setCanMoveSprite }: IPropsPhaserGame) => {
   }, [ref]);
 
   useEffect(() => {
-    EventBus.on("current-scene-ready", (scene_instance: Phaser.Scene) => {
-      const prevRef = ref.current as IRefPhaserGame;
-
-      ref.current = Object.assign(prevRef, { scene: scene_instance });
-
-      setCanMoveSprite(ref?.current?.scene?.scene.key === "MainMenu");
+    EventBus.on("current-scene-ready", (scene: Phaser.Scene) => {
+      setScene(scene);
     });
+
     return () => {
       EventBus.removeListener("current-scene-ready");
     };
