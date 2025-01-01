@@ -93,17 +93,16 @@ export default function Home() {
   const [scene, setScene] = useState<Phaser.Scene | null>(null);
 
   const DynamicUI = () => {
-    if (scene?.scene.isActive)
-      switch (scene?.scene.key) {
-        case "Preloader":
-          return <PreloaderUI scene={scene} />;
-        case "MainMenu":
-          return <MainMenuUI scene={scene} />;
-        case "Game":
-          return <GameUI scene={scene} />;
-        default:
-          return <></>;
-      }
+    switch (scene?.scene.key) {
+      case "Preloader":
+        return <PreloaderUI scene={scene} />;
+      case "MainMenu":
+        return <MainMenuUI scene={scene} />;
+      case "Game":
+        return <GameUI scene={scene} />;
+      default:
+        return <></>;
+    }
   };
 
   return (
