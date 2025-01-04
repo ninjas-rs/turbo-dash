@@ -29,25 +29,55 @@ function MainMenuUI({ scene }: { scene: Phaser.Scene }) {
   };
 
   return (
-    <div className="h-full flex flex-col justify-center items-center pointer-events-auto">
-      <Image
-        src="/assets/horns.png"
-        width={scene.scale.width / 8}
-        height={scene.scale.height / 8}
-        alt="Horns"
-        className="mb-2"
-      />
-      <Image
-        src="/assets/logo.png"
-        width={scene.scale.width / 1.6}
-        height={scene.scale.height / 1.6}
-        alt="Game Logo"
-        className="mb-16"
-      />
+    <div className="h-full w-full flex flex-col p-8">
+      <div className="flex flex-row justify-between">
+        <div className="flex flex-row items-center space-x-4">
+          <Image
+            src="/assets/logo.png"
+            width={scene.scale.width / 4}
+            height={scene.scale.height / 4}
+            alt="Game Logo"
+          />
+          <Image
+            src="/assets/horns.png"
+            width={scene.scale.width / 10}
+            height={scene.scale.height / 10}
+            alt="Horns"
+          />
+        </div>
 
-      <Button className="w-36" onClick={handleJoin}>
-        Join Game
-      </Button>
+        <div className="flex flex-row items-center space-x-4 pointer-events-auto">
+          <Button bg="#234319" shadow="#59B726">
+            Connect Wallet
+          </Button>
+        </div>
+      </div>
+
+      <div className="h-full flex flex-row justify-between items-center">
+        <Card
+          className="h-2/3 min-w-[20vw] border-8 flex flex-col items-center justify-center"
+          bg="#75dd6a"
+          shadowColor="#26541b"
+        >
+          Box 1
+        </Card>
+
+        <Button
+          shadow="#7e851b"
+          bg="#bdba25"
+          className="p-4 rounded-lg text-xl text-white pointer-events-auto"
+        >
+          START
+        </Button>
+
+        <Card
+          className="h-2/3 min-w-[20vw] border-8 flex flex-col items-center justify-center"
+          bg="#75dd6a"
+          shadowColor="#26541b"
+        >
+          Box 2
+        </Card>
+      </div>
     </div>
   );
 }
@@ -109,7 +139,11 @@ function PreloaderUI({ scene }: { scene: Phaser.Scene }) {
 }
 
 function Diagnostics({ scene }: { scene: Phaser.Scene | null }) {
-  return <div className="top-8 left-8">Scene: {scene?.scene.key}</div>;
+  return (
+    <div className="absolute top-4 left-8 text-red-400">
+      Scene: {scene?.scene.key}
+    </div>
+  );
 }
 
 export default function Home() {
@@ -132,11 +166,10 @@ export default function Home() {
   return (
     <div className="relative bg-[#060A02] min-h-screen">
       <div className="absolute h-screen w-screen pointer-events-none">
-        {process.env.NODE_ENV !== "production" && <Diagnostics scene={scene} />}
-
         <DynamicUI />
       </div>
 
+      {process.env.NODE_ENV !== "production" && <Diagnostics scene={scene} />}
       <PhaserGame ref={phaserRef} setScene={setScene} />
     </div>
   );
