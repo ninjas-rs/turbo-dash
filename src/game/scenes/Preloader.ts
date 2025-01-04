@@ -18,6 +18,8 @@ export class Preloader extends Scene {
     this.load.setPath("assets");
 
     this.load.image("logo", "logo.png");
+    this.load.image("main_menu_bg", "main_menu_bg.png");
+    this.load.image("player", "player.png");
   }
 
   create() {
