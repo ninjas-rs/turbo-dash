@@ -1,6 +1,27 @@
 import Image from "next/image";
 
 import { Button, Card } from "pixel-retroui";
+import { ReactNode } from "react";
+
+function PixelatedCard({ children }: { children: ReactNode }) {
+  return (
+    <Card
+      className="h-2/3 min-w-[20vw] border-8 flex flex-col items-center justify-center"
+      bg="#75dd6a"
+      shadowColor="#26541b"
+    >
+      {children}
+    </Card>
+  );
+}
+
+function Leaderboard() {
+  return <PixelatedCard>Leaderboard</PixelatedCard>;
+}
+
+function Season() {
+  return <PixelatedCard>Season</PixelatedCard>;
+}
 
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const handleJoin = () => {
@@ -33,13 +54,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       </div>
 
       <div className="h-full flex flex-row justify-between items-center">
-        <Card
-          className="h-2/3 min-w-[20vw] border-8 flex flex-col items-center justify-center"
-          bg="#75dd6a"
-          shadowColor="#26541b"
-        >
-          Box 1
-        </Card>
+        <Leaderboard />
 
         <Button
           shadow="#7e851b"
@@ -49,13 +64,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           START
         </Button>
 
-        <Card
-          className="h-2/3 min-w-[20vw] border-8 flex flex-col items-center justify-center"
-          bg="#75dd6a"
-          shadowColor="#26541b"
-        >
-          Box 2
-        </Card>
+        <Season />
       </div>
     </div>
   );
