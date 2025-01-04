@@ -10,7 +10,7 @@ const PhaserGame = dynamic<IPropsPhaserGame>(
   () => import("@/game/phaser-game"),
   {
     ssr: false,
-    loading: () => <div className="h-screen w-screen bg-[#74ff71]"></div>,
+    loading: () => <div className="h-screen w-screen bg-[#060A02]"></div>,
   }
 );
 
@@ -31,9 +31,16 @@ function MainMenuUI({ scene }: { scene: Phaser.Scene }) {
   return (
     <div className="h-full flex flex-col justify-center items-center pointer-events-auto">
       <Image
+        src="/assets/horns.png"
+        width={scene.scale.width / 8}
+        height={scene.scale.height / 8}
+        alt="Horns"
+        className="mb-2"
+      />
+      <Image
         src="/assets/logo.png"
-        width={scene.scale.width / 2}
-        height={scene.scale.height / 2}
+        width={scene.scale.width / 1.6}
+        height={scene.scale.height / 1.6}
         alt="Game Logo"
         className="mb-16"
       />
@@ -68,18 +75,35 @@ function PreloaderUI({ scene }: { scene: Phaser.Scene }) {
   }, []);
 
   return (
-    <div className="h-full flex flex-col justify-center items-center pointer-events-auto">
-      <Image
-        src="/assets/logo.png"
-        width={scene.scale.width / 2}
-        height={scene.scale.height / 2}
-        alt="Game Logo"
-        className="mb-16"
+    <div className="h-full flex flex-col justify-center items-center pointer-events-auto space-y-12">
+      <div className="flex flex-col items-center">
+        <Image
+          src="/assets/horns.png"
+          width={scene.scale.width / 7}
+          height={scene.scale.height / 7}
+          alt="Horns"
+          className="-my-4"
+        />
+        <Image
+          src="/assets/logo.png"
+          width={scene.scale.width / 1.4}
+          height={scene.scale.height / 1.4}
+          alt="Game Logo"
+        />
+      </div>
+
+      <ProgressBar
+        borderColor="#002D00"
+        color="#74ff71"
+        progress={progress}
+        size="lg"
+        className="w-1/6 border-8 h-14"
       />
 
-      <p className="text-xl font-bold">Loading...</p>
-      <ProgressBar progress={progress} size="lg" className="w-1/3" />
-      <p>*insert random tip*</p>
+      <p className="w-1/4 text-white text-center">
+        I never thought that one day I might wake up and not recognize my own
+        mother... It wasn't her.
+      </p>
     </div>
   );
 }
@@ -106,8 +130,8 @@ export default function Home() {
   };
 
   return (
-    <div className="relative bg-[#74ff71] min-h-screen">
-      <div className="absolute h-screen w-screen pointer-events-none text-black">
+    <div className="relative bg-[#060A02] min-h-screen">
+      <div className="absolute h-screen w-screen pointer-events-none">
         {process.env.NODE_ENV !== "production" && <Diagnostics scene={scene} />}
 
         <DynamicUI />
