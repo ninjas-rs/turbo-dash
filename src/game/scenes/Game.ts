@@ -55,8 +55,21 @@ export class Game extends Scene {
   }
 
   update() {
+    const { width, height } = this.scale;
+
+    // Parallax Effect
     this.planet.tilePositionX += 0.05;
     this.trees.tilePositionX += 0.3;
     this.ground.tilePositionX += 0.75;
+
+    // Stick the player to the ground
+    this.player.x -= 0.75;
+
+    // Ensuring player doesn't go off-screen
+    this.player.x = Phaser.Math.Clamp(
+      this.player.x,
+      this.player.width / 2,
+      width - this.player.width / 2
+    );
   }
 }
