@@ -60,6 +60,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           shadow="#7e851b"
           bg="#bdba25"
           className="p-4 rounded-lg text-xl text-white pointer-events-auto"
+          onClick={handleJoin}
         >
           START
         </Button>

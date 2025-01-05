@@ -18,6 +18,9 @@ const config: Phaser.Types.Core.GameConfig = {
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
   scene: [Boot, Preloader, MainMenu, MainGame],
+  physics: {
+    default: "arcade",
+  },
 };
 
 const StartGame = (parent: string) => {
