@@ -1,7 +1,10 @@
 import { Scene } from "phaser";
 import { EventBus } from "../event-bus";
 
+const grassHeight = 96;
+
 export class Game extends Scene {
+  // Game objects
   background!: Phaser.GameObjects.Image;
   planet!: Phaser.GameObjects.TileSprite;
   trees!: Phaser.GameObjects.TileSprite;
@@ -10,10 +13,32 @@ export class Game extends Scene {
   };
   player!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
 
-  grassHeight = 96;
+  // Misc
+  spacebar!: Phaser.Input.Keyboard.Key;
+
+  // Dynamic
+  groundSpeed = 0.75;
+  playerSpeed = 0.75;
 
   constructor() {
     super("Game");
+  }
+
+  jump() {
+    if (this.player.body.touching.down) {
+      this.player.setVelocityX(0);
+      this.player.setVelocityY(-500);
+      this.player.setVelocityX(200);
+
+      this.tweens
+        .add({
+          targets: this.player,
+          angle: 180,
+          duration: 800,
+          ease: "Linear",
+        })
+        .on("complete", () => this.player.setVelocityX(0));
+    }
   }
 
   setupObjects() {
@@ -37,19 +62,26 @@ export class Game extends Scene {
       .setScale(0.5, 0.5);
 
     this.physics.add.existing(this.ground, true);
-    this.player.setGravityY(1000);
+    this.player.setGravityY(1200);
 
-    this.ground.body.setSize(width, height / 3 - this.grassHeight);
-    this.ground.body.setOffset(0, this.grassHeight);
+    this.ground.body.setSize(width, height / 3 - grassHeight);
+    this.ground.body.setOffset(0, grassHeight);
   }
 
   setupColliders() {
     this.physics.add.collider(this.player, this.ground);
   }
 
+  setupInputs() {
+    this.spacebar = this.input.keyboard!.addKey(
+      Phaser.Input.Keyboard.KeyCodes.SPACE,
+    );
+  }
+
   create() {
     this.setupObjects();
     this.setupColliders();
+    this.setupInputs();
 
     EventBus.emit("current-scene-ready", this);
   }
@@ -60,16 +92,20 @@ export class Game extends Scene {
     // Parallax Effect
     this.planet.tilePositionX += 0.05;
     this.trees.tilePositionX += 0.3;
-    this.ground.tilePositionX += 0.75;
 
-    // Stick the player to the ground
-    this.player.x -= 0.75;
+    this.ground.tilePositionX += this.groundSpeed;
+    this.player.x -= this.playerSpeed;
 
     // Ensuring player doesn't go off-screen
     this.player.x = Phaser.Math.Clamp(
       this.player.x,
       this.player.width / 2,
-      width - this.player.width / 2
+      width - this.player.width / 2,
     );
+
+    // Controls
+    if (this.spacebar.isDown) {
+      this.jump();
+    }
   }
 }
