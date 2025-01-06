@@ -36,7 +36,12 @@ export class Game extends Scene {
     super("Game");
   }
 
-  handleObstacleOverlap() {}
+  handleObstacleOverlap(
+    obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+  ) {
+    this.events.emit("obstacle-hit");
+    obstacle.destroy();
+  }
 
   jump() {
     if (this.player.body.touching.down) {
@@ -117,8 +122,10 @@ export class Game extends Scene {
   setupColliders() {
     this.physics.add.collider(this.player, this.ground);
     this.obstacles = this.physics.add.group();
-    this.physics.add.overlap(this.player, this.obstacles, () =>
-      this.handleObstacleOverlap(),
+    this.physics.add.overlap(this.player, this.obstacles, (_, obstacle) =>
+      this.handleObstacleOverlap(
+        obstacle as Phaser.Types.Physics.Arcade.GameObjectWithBody,
+      ),
     );
   }
 

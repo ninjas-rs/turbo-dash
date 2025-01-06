@@ -20,7 +20,7 @@ export default function Preloader({ scene }: { scene: Phaser.Scene }) {
       }, 2000);
     });
 
-    () => {
+    return () => {
       scene.load.off("progress");
     };
   }, []);
