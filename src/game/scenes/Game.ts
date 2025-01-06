@@ -28,8 +28,9 @@ export class Game extends Scene {
   lastObstacleTime!: number;
 
   // Dynamic
-  groundSpeed = 0.75;
-  playerSpeed = 0.75;
+  groundSpeed = 300;
+  playerSpeed = 300;
+  obstaclesSpeed = 300;
 
   constructor() {
     super("Game");
@@ -72,7 +73,7 @@ export class Game extends Scene {
     obstacle.passed = false;
     obstacle.body.setAllowGravity(false);
     obstacle.setImmovable(true);
-    obstacle.setVelocityX(-400);
+    obstacle.setVelocityX(-this.obstaclesSpeed);
 
     this.lastObstacleTime = currentTime;
   }
@@ -144,13 +145,13 @@ export class Game extends Scene {
     this.planet.tilePositionX += 0.05;
     this.trees.tilePositionX += 0.3;
 
-    this.ground.tilePositionX += this.groundSpeed;
-    this.player.x -= this.playerSpeed;
+    this.ground.tilePositionX += this.groundSpeed / 60;
+    this.player.x -= this.playerSpeed / 60;
 
     // Ensuring player doesn't go off-screen
     this.player.x = Phaser.Math.Clamp(
-      this.player.x,
-      this.player.width / 2,
+      this.player.x / 60,
+      this.player.width * 2,
       width - this.player.width / 2,
     );
 
