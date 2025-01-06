@@ -23,6 +23,9 @@ export class Preloader extends Scene {
     this.load.image("bg_planet", "bg_planet.png");
     this.load.image("bg_trees", "bg_trees.png");
     this.load.image("ground", "ground.png");
+    this.load.image("coffin", "coffin.png");
+    this.load.image("grave_1", "grave_1.png");
+    this.load.image("grave_2", "grave_2.png");
   }
 
   create() {

@@ -2,6 +2,14 @@ import { Scene } from "phaser";
 import { EventBus } from "../event-bus";
 
 const grassHeight = 96;
+const obstaclesConfig = {
+  spacing: 1500,
+  types: [
+    { type: "coffin", points: 4, y: 480 },
+    { type: "grave_1", points: 2, y: 480 },
+    { type: "grave_2", points: 2, y: 480 },
+  ],
+};
 
 export class Game extends Scene {
   // Game objects
@@ -12,9 +20,12 @@ export class Game extends Scene {
     body: Phaser.Physics.Arcade.StaticBody;
   };
   player!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
+  obstacles!: Phaser.Physics.Arcade.Group;
 
   // Misc
   spacebar!: Phaser.Input.Keyboard.Key;
+  obstacleEvent!: Phaser.Time.TimerEvent;
+  lastObstacleTime!: number;
 
   // Dynamic
   groundSpeed = 0.75;
@@ -23,6 +34,8 @@ export class Game extends Scene {
   constructor() {
     super("Game");
   }
+
+  handleObstacleOverlap() {}
 
   jump() {
     if (this.player.body.touching.down) {
@@ -39,6 +52,38 @@ export class Game extends Scene {
         })
         .on("complete", () => this.player.setVelocityX(0));
     }
+  }
+
+  spawnObstacle() {
+    const { width } = this.scale;
+
+    const currentTime = this.time.now;
+    if (currentTime - this.lastObstacleTime < obstaclesConfig.spacing) return;
+
+    const obstacleConf = Phaser.Math.RND.pick(obstaclesConfig.types);
+    const obstacle = this.obstacles.create(
+      width - 100,
+      this.ground.y + (grassHeight - 24),
+      obstacleConf.type,
+    );
+    obstacle.setScale(0.4, 0.4);
+
+    obstacle.points = obstacleConf.points;
+    obstacle.passed = false;
+    obstacle.body.setAllowGravity(false);
+    obstacle.setImmovable(true);
+    obstacle.setVelocityX(-400);
+
+    this.lastObstacleTime = currentTime;
+  }
+
+  startObstacleGeneration() {
+    this.obstacleEvent = this.time.addEvent({
+      delay: 100,
+      callback: this.spawnObstacle,
+      callbackScope: this,
+      loop: true,
+    });
   }
 
   setupObjects() {
@@ -70,6 +115,10 @@ export class Game extends Scene {
 
   setupColliders() {
     this.physics.add.collider(this.player, this.ground);
+    this.obstacles = this.physics.add.group();
+    this.physics.add.overlap(this.player, this.obstacles, () =>
+      this.handleObstacleOverlap(),
+    );
   }
 
   setupInputs() {
@@ -84,10 +133,12 @@ export class Game extends Scene {
     this.setupInputs();
 
     EventBus.emit("current-scene-ready", this);
+
+    this.startObstacleGeneration();
   }
 
   update() {
-    const { width, height } = this.scale;
+    const { width } = this.scale;
 
     // Parallax Effect
     this.planet.tilePositionX += 0.05;
@@ -107,5 +158,15 @@ export class Game extends Scene {
     if (this.spacebar.isDown) {
       this.jump();
     }
+
+    // Obstacles management
+    this.obstacles.getChildren().forEach((obstacle) => {
+      const obs = obstacle as Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
+
+      // Clean up off-screen obstacles
+      if (obs.x < -100) {
+        obs.destroy();
+      }
+    });
   }
 }
