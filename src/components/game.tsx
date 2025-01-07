@@ -11,6 +11,8 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
     })),
   );
 
+  const [sp, setSp] = useState(0); // load default from web3 or db
+
   const handleDeath = () => {
     console.log("player died");
   };
@@ -41,7 +43,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   return (
     <div className="h-full w-full flex flex-col p-8">
       <div className="flex flex-row justify-between">
-        <div className="flex flex-row">
+        <div className="flex flex-row space-x-8">
           <div className="flex flex-row space-x-2">
             {lives.map((life, idx) => (
               <Image
@@ -57,6 +59,15 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
               />
             ))}
           </div>
+
+          <Card
+            bg="#bdba25"
+            borderColor="#59b726"
+            shadowColor="#7e851b"
+            className="rounded-sm text-white"
+          >
+            {sp} SP
+          </Card>
         </div>
 
         <Card>$100</Card>
