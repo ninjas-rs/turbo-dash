@@ -12,6 +12,8 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   );
 
   const [sp, setSp] = useState(0); // load default from web3 or db
+  const [xp, setXp] = useState(0); // load default from web3 or db
+  const [walletAddress, setWalletAddress] = useState("0x12345678901234567890"); // load from web3
 
   const handleDeath = () => {
     console.log("player died");
@@ -70,7 +72,25 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
           </Card>
         </div>
 
-        <Card>$100</Card>
+        <div className="flex flex-row space-x-8">
+          <Card
+            bg="#255706"
+            shadowColor="#234319"
+            borderColor="#59b726"
+            className="text-white"
+          >
+            {xp} XP
+          </Card>
+
+          <Card
+            bg="#255706"
+            shadowColor="#234319"
+            borderColor="#59b726"
+            className="text-white"
+          >
+            {walletAddress}
+          </Card>
+        </div>
       </div>
     </div>
   );
