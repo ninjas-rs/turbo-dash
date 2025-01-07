@@ -5,9 +5,24 @@ const grassHeight = 96;
 const obstaclesConfig = {
   spacing: 1500,
   types: [
-    { type: "coffin", points: 4, y: 480 },
-    { type: "grave_1", points: 2, y: 480 },
-    { type: "grave_2", points: 2, y: 480 },
+    {
+      type: "coffin",
+      points: 4,
+      y: 480,
+      hitboxOffset: { width: 60, height: 80 },
+    },
+    {
+      type: "grave_1",
+      points: 2,
+      y: 480,
+      hitboxOffset: { width: 40, height: 40 },
+    },
+    {
+      type: "grave_2",
+      points: 2,
+      y: 480,
+      hitboxOffset: { width: 70, height: 40 },
+    },
   ],
 };
 
@@ -80,6 +95,11 @@ export class Game extends Scene {
     obstacle.setImmovable(true);
     obstacle.setVelocityX(-this.obstaclesSpeed);
 
+    obstacle.body.setSize(
+      obstacle.width - obstacleConf.hitboxOffset.width,
+      obstacle.height - obstacleConf.hitboxOffset.height,
+    ); // make hitbox smaller than sprite
+
     this.lastObstacleTime = currentTime;
   }
 
@@ -111,6 +131,8 @@ export class Game extends Scene {
     this.player = this.physics.add
       .image(width / 2, height / 2, "player")
       .setScale(0.5, 0.5);
+
+    this.player.body.setSize(this.player.width - 20, this.player.height - 20); // make hitbox smaller than sprite
 
     this.physics.add.existing(this.ground, true);
     this.player.setGravityY(1200);
