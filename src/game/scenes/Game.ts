@@ -51,6 +51,10 @@ export class Game extends Scene {
     super("Game");
   }
 
+  pause() {
+    this.scene.pause();
+  }
+
   handleObstacleOverlap(
     obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody,
   ) {
@@ -157,10 +161,26 @@ export class Game extends Scene {
     );
   }
 
+  setupEventsFromReact() {
+    this.events.on("pause", () => {
+      this.scene.pause();
+    });
+
+    this.events.on("resume", () => {
+      // we can have a backwards counter here maybe
+      this.scene.resume();
+    });
+
+    this.events.on("restart", () => {
+      this.scene.restart();
+    });
+  }
+
   create() {
     this.setupObjects();
     this.setupColliders();
     this.setupInputs();
+    this.setupEventsFromReact();
 
     EventBus.emit("current-scene-ready", this);
 
