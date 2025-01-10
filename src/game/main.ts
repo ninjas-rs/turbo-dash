@@ -12,7 +12,10 @@ const config: Phaser.Types.Core.GameConfig = {
   type: AUTO,
   width: 1280,
   height: 720,
-  backgroundColor: "#a1fea0", // eclipse auora
+  backgroundColor: "#a1fea0", // eclipse auora,
+  fps: {
+    target: 60,
+  },
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -21,6 +24,8 @@ const config: Phaser.Types.Core.GameConfig = {
   physics: {
     default: "arcade",
     arcade: {
+      fps: 60,
+      fixedStep: true,
       gravity: { x: 0, y: 10 },
       debug: false,
     },
