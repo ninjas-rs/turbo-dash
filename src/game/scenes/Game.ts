@@ -61,6 +61,8 @@ export class Game extends Scene {
   ) {
     this.events.emit("obstacle-hit");
     obstacle.destroy();
+
+    this.sound.add("hit_sound").play();
   }
 
   jump() {
@@ -77,6 +79,8 @@ export class Game extends Scene {
           ease: "Linear",
         })
         .on("complete", () => this.player.setVelocityX(0));
+
+      this.sound.add("jump_sound").play();
     }
   }
 
