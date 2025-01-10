@@ -44,7 +44,7 @@ export class Game extends Scene {
   lastObstacleTime!: number;
 
   // Dynamic
-  groundSpeed = 300;
+  groundSpeed = 150;
   playerSpeed = 300;
   obstaclesSpeed = 300;
 
