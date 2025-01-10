@@ -61,6 +61,11 @@ export class Game extends Scene {
   ) {
     this.events.emit("obstacle-hit");
     obstacle.destroy();
+    this.player.setTexture("player_obstacle");
+
+    this.time.delayedCall(500, () => {
+      this.player.setTexture("player");
+    });
   }
 
   jump() {

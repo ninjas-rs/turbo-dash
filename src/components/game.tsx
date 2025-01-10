@@ -88,7 +88,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
                 <Image
                   key={idx}
                   height={48}
-                  width={48}
+                  width={68}
                   alt="heart"
                   src={
                     life.exhausted

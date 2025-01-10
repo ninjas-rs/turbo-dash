@@ -33,6 +33,7 @@ export class Preloader extends Scene {
     this.load.image("logo", "logo.png");
     this.load.image("main_menu_bg", "main_menu_bg.png");
     this.load.image("player", "player.png");
+    this.load.image("player_obstacle", "player_red.png");
     this.load.image("bg_planet", "bg_planet.png");
     this.load.image("bg_trees", "bg_trees.png");
     this.load.image("ground", "ground.png");
