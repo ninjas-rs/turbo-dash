@@ -13,6 +13,19 @@ export class Preloader extends Scene {
     EventBus.emit("current-scene-ready", this);
   }
 
+  createParticleTexture() {
+    const graphics = this.add.graphics();
+    const radius = 4;
+
+    // Draw a green circle
+    graphics.fillStyle(0x774c30, 1); // Emerald green color
+    graphics.fillCircle(radius, radius, radius);
+
+    // Generate texture from graphics
+    graphics.generateTexture("particle", radius * 2, radius * 2);
+    graphics.destroy();
+  }
+
   preload() {
     //  Load the assets for the game - Replace with your own assets
     this.load.setPath("assets");
@@ -26,6 +39,8 @@ export class Preloader extends Scene {
     this.load.image("coffin", "coffin.png");
     this.load.image("grave_1", "grave_1.png");
     this.load.image("grave_2", "grave_2.png");
+
+    this.createParticleTexture();
   }
 
   create() {

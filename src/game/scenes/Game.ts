@@ -36,6 +36,7 @@ export class Game extends Scene {
   };
   player!: Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
   obstacles!: Phaser.Physics.Arcade.Group;
+  skidEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
 
   // Misc
   spacebar!: Phaser.Input.Keyboard.Key;
@@ -161,6 +162,18 @@ export class Game extends Scene {
     );
   }
 
+  setupParticles() {
+    this.skidEmitter = this.add.particles(0, 0, "particle", {
+      speed: { min: 50, max: 100 },
+      angle: { min: 160, max: 200 },
+      scale: { start: 0.4, end: 0 },
+      lifespan: 300,
+      gravityY: 300,
+      quantity: 2,
+      frequency: 80,
+    });
+  }
+
   setupEventsFromReact() {
     this.events.on("pause", () => {
       this.scene.pause();
@@ -180,6 +193,7 @@ export class Game extends Scene {
     this.setupObjects();
     this.setupColliders();
     this.setupInputs();
+    this.setupParticles();
     this.setupEventsFromReact();
 
     EventBus.emit("current-scene-ready", this);
@@ -218,5 +232,16 @@ export class Game extends Scene {
         obs.destroy();
       }
     });
+
+    // Update particle emitter position and emit particles when skidding
+    if (this.player.body.touching.down) {
+      this.skidEmitter.setPosition(
+        this.player.x,
+        this.player.y + this.player.height / 4,
+      );
+      this.skidEmitter.start();
+    } else {
+      this.skidEmitter.stop();
+    }
   }
 }
