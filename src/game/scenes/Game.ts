@@ -87,7 +87,7 @@ export class Game extends Scene {
 
     const obstacleConf = Phaser.Math.RND.pick(obstaclesConfig.types);
     const obstacle = this.obstacles.create(
-      width - 100,
+      width,
       this.ground.y + (grassHeight - 24),
       obstacleConf.type,
     );
