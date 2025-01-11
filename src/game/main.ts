@@ -12,7 +12,7 @@ const config: Phaser.Types.Core.GameConfig = {
   type: AUTO,
   width: 1280,
   height: 720,
-  backgroundColor: "#a1fea0", // eclipse auora,
+  backgroundColor: "#000000", // eclipse auora,
   fps: {
     target: 60,
   },
