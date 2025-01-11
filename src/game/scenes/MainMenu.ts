@@ -10,8 +10,6 @@ export class MainMenu extends Scene {
   }
 
   create() {
-    this.sound.add("background_music").play();
-
     const { width, height } = this.scale;
 
     this.background = this.add.image(0, 0, "main_menu_bg").setOrigin(0, 0);

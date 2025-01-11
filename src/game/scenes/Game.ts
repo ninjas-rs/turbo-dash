@@ -38,6 +38,11 @@ export class Game extends Scene {
   obstacles!: Phaser.Physics.Arcade.Group;
   skidEmitter!: Phaser.GameObjects.Particles.ParticleEmitter;
 
+  // Sound
+  backgroundMusic!: Phaser.Sound.WebAudioSound;
+  jumpSound!: Phaser.Sound.WebAudioSound;
+  hitSound!: Phaser.Sound.WebAudioSound;
+
   // Misc
   spacebar!: Phaser.Input.Keyboard.Key;
   obstacleEvent!: Phaser.Time.TimerEvent;
@@ -62,7 +67,7 @@ export class Game extends Scene {
     this.events.emit("obstacle-hit");
     obstacle.destroy();
 
-    this.sound.add("hit_sound").play();
+    this.hitSound.play();
   }
 
   jump() {
@@ -80,7 +85,7 @@ export class Game extends Scene {
         })
         .on("complete", () => this.player.setVelocityX(0));
 
-      this.sound.add("jump_sound").play();
+      this.jumpSound.play();
     }
   }
 
@@ -195,9 +200,20 @@ export class Game extends Scene {
     });
   }
 
+  setupSound() {
+    this.backgroundMusic = this.sound.add(
+      "background_music",
+    ) as Phaser.Sound.WebAudioSound;
+    this.jumpSound = this.sound.add("jump_sound") as Phaser.Sound.WebAudioSound;
+    this.hitSound = this.sound.add("hit_sound") as Phaser.Sound.WebAudioSound;
+
+    this.backgroundMusic.play();
+  }
+
   create() {
     this.setupObjects();
     this.setupColliders();
+    this.setupSound();
     this.setupInputs();
     this.setupParticles();
     this.setupEventsFromReact();
