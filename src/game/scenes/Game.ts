@@ -210,7 +210,7 @@ export class Game extends Scene {
     const { width } = this.scale;
 
     // Parallax Effect
-    this.planet.tilePositionX += 0.05;
+    // this.planet.tilePositionX += 0.05;
     this.trees.tilePositionX += 0.3;
 
     this.ground.tilePositionX += this.groundSpeed / 60;

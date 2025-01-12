@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
 import { ProgressBar } from "pixel-retroui";
 
 export default function Preloader({ scene }: { scene: Phaser.Scene }) {
@@ -10,6 +9,7 @@ export default function Preloader({ scene }: { scene: Phaser.Scene }) {
     if (progress == 100) {
       scene.scene.start("MainMenu");
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress]);
 
   useEffect(() => {
@@ -23,22 +23,16 @@ export default function Preloader({ scene }: { scene: Phaser.Scene }) {
     return () => {
       scene.load.off("progress");
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <div className="h-full flex flex-col justify-center items-center pointer-events-auto space-y-12">
       <div className="flex flex-col items-center">
         <Image
-          src="/assets/horns.png"
-          width={scene.scale.width / 7}
-          height={scene.scale.height / 7}
-          alt="Horns"
-          className="-my-4"
-        />
-        <Image
-          src="/assets/logo.png"
-          width={scene.scale.width / 1.4}
-          height={scene.scale.height / 1.4}
+          src="/assets/logo.svg"
+          width={scene.scale.width / 2}
+          height={scene.scale.height / 2}
           alt="Game Logo"
         />
       </div>
@@ -51,9 +45,9 @@ export default function Preloader({ scene }: { scene: Phaser.Scene }) {
         className="w-1/6 border-8 h-14"
       />
 
-      <p className="w-1/4 text-white text-center">
+      <p className="w-1/3 text-white text-center">
         I never thought that one day I might wake up and not recognize my own
-        mother... It wasn't her.
+        mother... It wasn&apos;t her.
       </p>
     </div>
   );
