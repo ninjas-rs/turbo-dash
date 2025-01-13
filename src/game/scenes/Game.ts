@@ -66,6 +66,11 @@ export class Game extends Scene {
   ) {
     this.events.emit("obstacle-hit");
     obstacle.destroy();
+    this.player.setTexture("player_obstacle");
+
+    this.time.delayedCall(500, () => {
+      this.player.setTexture("player");
+    });
 
     this.hitSound.play();
   }
@@ -225,8 +230,8 @@ export class Game extends Scene {
 
   update(time: number, delta: number) {
     // Parallax Effect
-    const parallaxFactor = delta / 16.6667; // Normalize to 60 FPS
-    this.trees.tilePositionX += 0.3 * parallaxFactor;
+    this.planet.tilePositionX += 0.05;
+    this.trees.tilePositionX += 0.3;
 
     this.ground.tilePositionX += (this.groundSpeed / 1000) * delta;
     this.player.x -= (this.playerSpeed / 1000) * delta;

@@ -20,7 +20,7 @@ const PhaserGame = dynamic<IPropsPhaserGame>(
 export default function Home() {
   const phaserRef = useRef<IRefPhaserGame>(null);
   const [scene, setScene] = useState<Phaser.Scene | null>(null);
-
+ 
   const DynamicUI = () => {
     switch (scene?.scene.key) {
       case "Preloader":
@@ -35,7 +35,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative bg-[#060A02] min-h-screen">
+    <div className="relative bg-[url('/assets/bg.png')] min-h-screen">
       <div className="absolute h-screen w-screen pointer-events-none">
         <DynamicUI />
       </div>
