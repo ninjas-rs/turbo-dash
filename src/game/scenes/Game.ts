@@ -230,8 +230,8 @@ export class Game extends Scene {
 
   update(time: number, delta: number) {
     // Parallax Effect
-    this.planet.tilePositionX += 0.05;
-    this.trees.tilePositionX += 0.3;
+    const parallaxFactor = delta / 16.6667; // Normalize to 60 FPS
+    this.trees.tilePositionX += 0.3 * parallaxFactor;
 
     this.ground.tilePositionX += (this.groundSpeed / 1000) * delta;
     this.player.x -= (this.playerSpeed / 1000) * delta;
