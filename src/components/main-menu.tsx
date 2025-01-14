@@ -5,6 +5,7 @@ import { Button, Card } from "pixel-retroui";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 
+
 const Mock = [
   {
     address: "0x4r...897",

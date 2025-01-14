@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useCallback, useEffect } from "react";
 import { Connection } from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
@@ -6,7 +5,7 @@ import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import Capsule, { Environment } from "@usecapsule/react-sdk";
 
 export const useCapsule = () => {
-  const { setActive, setSigner, isActive } = useCapsuleStore();
+  const { setActive, fetchBalance, setSigner, isActive } = useCapsuleStore();
 
   const capsuleClient = new Capsule(
     Environment.BETA,
@@ -38,6 +37,17 @@ export const useCapsule = () => {
   useEffect(() => {
     initializeSigner();
   }, [initializeSigner]);
+
+  useEffect(() => {
+    if (!isActive) return;
+
+    fetchBalance();
+    const interval = setInterval(() => {
+      fetchBalance();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [isActive, fetchBalance]);
 
   
 

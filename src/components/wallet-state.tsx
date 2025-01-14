@@ -5,7 +5,7 @@ import clsx from "clsx";
 import { CapsuleModal, OAuthMethod } from "@usecapsule/react-sdk";
 import "@usecapsule/react-sdk/styles.css";
 import { useState, useMemo } from "react";
-import { useCapsule } from "@/app/hooks/useCapsule";
+import { useCapsule } from "@/hooks/useCapsule";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { LuWalletMinimal } from "react-icons/lu";
 import Image from "next/image";
@@ -23,7 +23,7 @@ export default function WalletState({
 }: WalletStateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { capsuleClient, initialize } = useCapsule();
-  const { isActive, signer } = useCapsuleStore();
+  const { isActive, signer, balanceUsd, balance } = useCapsuleStore();
 
   const truncatedAddress = useMemo(() => {
     if (!signer) return "";
@@ -31,7 +31,6 @@ export default function WalletState({
   }, [signer]);
 
   const handleModalClose = () => {
-    console.log("Modal closed");
     setIsModalOpen(false);
     initialize();
   };
@@ -88,7 +87,7 @@ export default function WalletState({
           shadowColor="#7e851b"
           className="rounded-sm text-white mr-2"
         >
-          0.001 ETH
+        {balance ? balance : '...'} ETH (${balanceUsd})
         </Card>
       )}
       <Button
