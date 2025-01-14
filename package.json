@@ -12,6 +12,7 @@
     "@solana/web3.js": "^1.98.0",
     "@usecapsule/react-sdk": "^4.17.0",
     "@usecapsule/solana-web3.js-v1-integration": "^1.17.0",
+    "clsx": "^2.1.1",
     "next": "15.1.3",
     "phaser": "^3.87.0",
     "pixel-retroui": "^1.0.67",

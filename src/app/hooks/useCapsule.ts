@@ -17,7 +17,7 @@ export const useCapsule = () => {
 
   const initializeSigner = useCallback(async () => {
     try {
-      const isActive = await capsuleClient.isSessionActive();
+      const isActive = capsuleClient.isEmail;
       setActive(isActive);
       if (isActive) {
         const signer = new CapsuleSolanaWeb3Signer(capsuleClient, connection);
@@ -30,11 +30,16 @@ export const useCapsule = () => {
     }
   }, [isActive]);
 
-
+  useEffect(() => {
+    console.log("Capsule email", capsuleClient.isEmail, "setting active");
+    setActive(capsuleClient.isEmail);
+  }, [capsuleClient.isEmail, setActive]);
 
   useEffect(() => {
     initializeSigner();
-  }, []);
+  }, [initializeSigner]);
+
+  
 
   return {
     capsuleClient,

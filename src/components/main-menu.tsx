@@ -3,6 +3,7 @@ import PixelatedCard from "./pixelated-card";
 import WalletState from "./wallet-state";
 import { Button, Card } from "pixel-retroui";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
+import { useCapsuleStore } from "@/stores/useCapsuleStore";
 
 const Mock = [
   {
@@ -80,13 +81,12 @@ function Season() {
         <h1 className="py-4">EARLY WINTER ARC</h1>
         <p>season ends in</p>
         <h2 className="text-3xl text-bold">23:12:123</h2>
-        <br/>
+        <br />
         <p>current rank</p>
         <h2 className="text-3xl text-bold">190th</h2>
-        <br/>
+        <br />
         <p>total rewards in pot</p>
         <h2 className="text-3xl text-bold">1238$</h2>
-
       </div>
     </PixelatedCard>
   );
@@ -96,6 +96,8 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const handleJoin = () => {
     scene.scene.start("Game");
   };
+
+  const { isActive } = useCapsuleStore();
 
   return (
     <div className="h-full w-full bg-[url('/assets/main_menu_bg.svg')] bg-cover bg-center bg-no-repeat flex flex-col p-8">
@@ -111,22 +113,29 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
 
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
-          <WalletState />
+          <WalletState text="Sign in to Play" />
         </div>
       </div>
 
       <div className="h-full flex mx-10 flex-row justify-between items-center">
         <Leaderboard />
         <div className="flex flex-col items-center justify-center space-y-8">
-          <button className="bg-none pointer-events-auto" onClick={handleJoin}>
-            <Image
-              src={"/assets/start.png"}
-              alt="start"
-              width={180}
-              height={60}
+          {isActive ? (
+            <button
+              className="bg-none pointer-events-auto"
               onClick={handleJoin}
-            ></Image>
-          </button>
+            >
+              <Image
+                src={"/assets/start.png"}
+                alt="start"
+                width={180}
+                height={60}
+                onClick={handleJoin}
+              ></Image>
+            </button>
+          ) : (
+            <WalletState mainMenu={true} />
+          )}
           <Image
             src={"/assets/player.png"}
             alt="player"
