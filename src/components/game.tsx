@@ -1,7 +1,7 @@
 import { Button, Card } from "pixel-retroui";
 import { useEffect, useState } from "react";
-import PixelatedCard from "./pixelated-card";
 import WalletState from "./wallet-state";
+import { BsArrowRight } from "react-icons/bs";
 
 const DEFAULT_LIVES = 3;
 
@@ -20,15 +20,55 @@ function DeathModal({
   backToMainMenu: ClickHandler;
 }) {
   return (
-    <PixelatedCard>
-      <h2 className="z-50 text-2xl text-[#d42f2f] mb-4">Game Over!</h2>
-      <Button bg="transparent" shadow="#429e34" onClick={() => restart()}>
-        Restart Game
+    <Card
+      bg="#239B3F"
+      borderColor="#26541B"
+      shadowColor="#59b726"
+      className="flex flex-col p-2 pointer-events-auto"
+    >
+      <h2 className="z-50 text-2xl text-[#671919] mb-4">
+        Game Over! (For now)
+      </h2>
+      <p className="pb-4">
+        You&apos;ve crossed paths with death herself, here on out you have two
+        choices, restart, or here go down the extra mile to get that high score
+        (trust me it&apos;s gonna be worth it in the end)
+      </p>
+      <p className="text-center text-xl pb-3">get more lives</p>
+      <div className="flex flex-row w-full pb-8">
+        <Button
+          bg="transparent"
+          shadow="#429e34"
+          className="p-4 text-sm w-1/3"
+          onClick={backToMainMenu}
+        >
+         <p className="text-xl"> 0.2$</p> (1 life)
+        </Button>
+        <Button
+          bg="transparent"
+          shadow="#429e34"
+            className="p-4 text-sm w-1/3"
+          onClick={backToMainMenu}
+          >
+           <p className="text-xl"> 0.5$</p> (3 lives)
+        </Button>
+        <Button
+          bg="transparent"
+          shadow="#429e34"
+          onClick={backToMainMenu}
+            className="p-4 text-sm w-1/3"
+        >
+         <p className="text-xl"> 1$</p> (6 lives)
+        </Button>
+      </div>
+
+      <Button bg="transparent" shadow="#429e34" className="text-sm" onClick={() => restart()}>
+        Start all over Again
       </Button>
-      <Button bg="transparent" shadow="#429e34" onClick={backToMainMenu}>
-        Exit to MainMenu
+      <Button bg="transparent" shadow="#429e34" className=" space-x-2 text-sm !border-0 flex flex-row items-center justify-center" onClick={backToMainMenu}>
+        <p>Exit to MainMenu</p> <BsArrowRight className=""/>
       </Button>
-    </PixelatedCard>
+    </Card>
   );
 }
 
