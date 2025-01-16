@@ -124,11 +124,18 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
     );
   };
 
+  const scoreInc = (inc: number) => {
+    console.log(`Adding ${inc} points`);
+    setSp((score) => score + inc);
+  };
+
   useEffect(() => {
     scene.events.on("obstacle-hit", handleObstacleHit);
+    scene.events.on("score-inc", scoreInc);
 
     return () => {
       scene.events.off("obstacle-hit", handleObstacleHit);
+      scene.events.off("score-inc", scoreInc);
     };
   }, [lives]);
 
