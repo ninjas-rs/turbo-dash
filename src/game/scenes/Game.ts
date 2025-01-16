@@ -62,7 +62,7 @@ export class Game extends Scene {
   }
 
   handleObstacleOverlap(
-    obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody,
+    obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody
   ) {
     this.events.emit("obstacle-hit");
     obstacle.destroy();
@@ -104,7 +104,7 @@ export class Game extends Scene {
     const obstacle = this.obstacles.create(
       width,
       this.ground.y + (grassHeight - 24),
-      obstacleConf.type,
+      obstacleConf.type
     );
     obstacle.setScale(0.4, 0.4);
 
@@ -118,7 +118,7 @@ export class Game extends Scene {
 
     obstacle.body.setSize(
       obstacle.width - obstacleConf.hitboxOffset.width,
-      obstacle.height - obstacleConf.hitboxOffset.height,
+      obstacle.height - obstacleConf.hitboxOffset.height
     ); // make hitbox smaller than sprite
 
     this.lastObstacleTime = currentTime;
@@ -150,7 +150,7 @@ export class Game extends Scene {
       .setOrigin(0, 0);
 
     this.player = this.physics.add
-      .image(width / 2, height / 2, "player")
+      .image(width / 5.5, height / 2, "player")
       .setScale(0.5, 0.5);
 
     this.player.body.setSize(this.player.width - 20, this.player.height - 20); // make hitbox smaller than sprite
@@ -167,14 +167,14 @@ export class Game extends Scene {
     this.obstacles = this.physics.add.group();
     this.physics.add.overlap(this.player, this.obstacles, (_, obstacle) =>
       this.handleObstacleOverlap(
-        obstacle as Phaser.Types.Physics.Arcade.GameObjectWithBody,
-      ),
+        obstacle as Phaser.Types.Physics.Arcade.GameObjectWithBody
+      )
     );
   }
 
   setupInputs() {
     this.spacebar = this.input.keyboard!.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE,
+      Phaser.Input.Keyboard.KeyCodes.SPACE
     );
   }
 
@@ -203,11 +203,16 @@ export class Game extends Scene {
     this.events.on("restart", () => {
       this.scene.restart();
     });
+
+    this.events.on("back-to-main-menu", () => {
+      this.sound.destroy();
+      this.scene.start("MainMenu");
+    });
   }
 
   setupSound() {
     this.backgroundMusic = this.sound.add(
-      "background_music",
+      "background_music"
     ) as Phaser.Sound.WebAudioSound;
     this.jumpSound = this.sound.add("jump_sound") as Phaser.Sound.WebAudioSound;
     this.hitSound = this.sound.add("hit_sound") as Phaser.Sound.WebAudioSound;
@@ -240,7 +245,7 @@ export class Game extends Scene {
     this.player.x = Phaser.Math.Clamp(
       this.player.x,
       this.player.width * 2,
-      this.scale.width - this.player.width / 2,
+      this.scale.width - this.player.width / 2
     );
 
     // Controls
@@ -262,7 +267,7 @@ export class Game extends Scene {
     if (this.player.body.touching.down) {
       this.skidEmitter.setPosition(
         this.player.x,
-        this.player.y + this.player.height / 4,
+        this.player.y + this.player.height / 4
       );
       this.skidEmitter.start();
     } else {

@@ -42,31 +42,41 @@ function DeathModal({
           className="p-4 text-sm w-1/3"
           onClick={backToMainMenu}
         >
-         <p className="text-xl"> 0.2$</p> (1 life)
+          <p className="text-xl"> 0.2$</p> (1 life)
         </Button>
         <Button
           bg="transparent"
           shadow="#429e34"
-            className="p-4 text-sm w-1/3"
+          className="p-4 text-sm w-1/3"
           onClick={backToMainMenu}
-          >
-           <p className="text-xl"> 0.5$</p> (3 lives)
-        </Button>
-        <Button
-          bg="transparent"
-          shadow="#429e34"
-          onClick={backToMainMenu}
-            className="p-4 text-sm w-1/3"
         >
-         <p className="text-xl"> 1$</p> (6 lives)
+          <p className="text-xl"> 0.5$</p> (3 lives)
+        </Button>
+        <Button
+          bg="transparent"
+          shadow="#429e34"
+          onClick={backToMainMenu}
+          className="p-4 text-sm w-1/3"
+        >
+          <p className="text-xl"> 1$</p> (6 lives)
         </Button>
       </div>
 
-      <Button bg="transparent" shadow="#429e34" className="text-sm" onClick={() => restart()}>
+      <Button
+        bg="transparent"
+        shadow="#429e34"
+        className="text-sm"
+        onClick={() => restart()}
+      >
         Start all over Again
       </Button>
-      <Button bg="transparent" shadow="#429e34" className=" space-x-2 text-sm !border-0 flex flex-row items-center justify-center" onClick={backToMainMenu}>
-        <p>Exit to MainMenu</p> <BsArrowRight className=""/>
+      <Button
+        bg="transparent"
+        shadow="#429e34"
+        className=" space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
+        onClick={backToMainMenu}
+      >
+        <p>Exit to MainMenu</p> <BsArrowRight className="" />
       </Button>
     </Card>
   );
@@ -91,7 +101,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
     setLives(makeLives(DEFAULT_LIVES));
     setSp(0);
 
-    scene.scene.start("MainMenu");
+    scene.events.emit("back-to-main-menu");
   };
 
   const handleDeath = () => {

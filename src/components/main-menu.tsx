@@ -5,7 +5,6 @@ import { Button, Card } from "pixel-retroui";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 
-
 const Mock = [
   {
     address: "0x4r...897",
@@ -131,7 +130,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
                 alt="start"
                 width={180}
                 height={60}
-                onClick={handleJoin}
               ></Image>
             </button>
           ) : (
