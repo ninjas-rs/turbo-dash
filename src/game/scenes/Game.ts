@@ -231,6 +231,7 @@ export class Game extends Scene {
     });
 
     this.events.on("restart", () => {
+      this.sound.destroy();
       this.scene.restart();
     });
 

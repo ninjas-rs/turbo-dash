@@ -41,20 +41,22 @@ export default function WalletState({
         capsule={capsuleClient}
         isOpen={isModalOpen}
         onClose={handleModalClose}
-        className={clsx("pointer-events-auto", className)}
+        logo={"/assets/player.png"}
         theme={{
           mode: "dark",
           backgroundColor: "#2c2c2c",
           foregroundColor: "#ffffff",
           accentColor: "#000000",
         }}
-        oAuthMethods={[OAuthMethod.TWITTER]}
-        disableEmailLogin={false}
+        oAuthMethods={[OAuthMethod.GOOGLE, OAuthMethod.TWITTER]}
+        disableEmailLogin={true}
         disablePhoneLogin={true}
         authLayout={["AUTH:FULL"]}
+        externalWallets={[]}
         twoFactorAuthEnabled={false}
-        recoverySecretStepEnabled={false}
+        recoverySecretStepEnabled={true}
         onRampTestMode
+        className="pointer-events-auto"
       />
     );
   };
@@ -87,7 +89,7 @@ export default function WalletState({
           shadowColor="#7e851b"
           className="rounded-sm text-white mr-2"
         >
-        {balance ? balance : '...'} ETH (${balanceUsd})
+          {balance ? balance : "..."} ETH (${balanceUsd})
         </Card>
       )}
       <Button
