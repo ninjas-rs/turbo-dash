@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-expressions */
 import { useCallback, useEffect } from "react";
 import { Connection } from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
@@ -10,7 +9,7 @@ export const useCapsule = () => {
 
   const capsuleClient = new Capsule(
     Environment.BETA,
-    process.env.NEXT_PUBLIC_CAPSULE_API_KEY!
+    process.env.NEXT_PUBLIC_CAPSULE_API_KEY!,
   );
 
   const connection = new Connection("https://testnet.dev2.eclipsenetwork.xyz");
@@ -29,8 +28,6 @@ export const useCapsule = () => {
       setActive(false);
     }
   }, [isActive]);
-
-
 
   useEffect(() => {
     initializeSigner();

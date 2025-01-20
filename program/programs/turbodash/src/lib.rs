@@ -54,6 +54,7 @@ pub mod turbodash {
 
     pub fn join_contest(ctx: Context<JoinContest>) -> Result<()> {
         let player_state = &mut ctx.accounts.player_state;
+
         let contest = &mut ctx.accounts.contest;
 
         let current_time = Clock::get()?.unix_timestamp;

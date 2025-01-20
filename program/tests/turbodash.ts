@@ -47,7 +47,7 @@ describe("Tests:TurboDash", () => {
   };
 
   it("Initialize global account", async () => {
-    const tx = await program.methods
+    await program.methods
       .initialize(serverKey.publicKey, feesAccount.publicKey)
       .accountsStrict({
         global: getGlobalAccount(),
@@ -67,7 +67,7 @@ describe("Tests:TurboDash", () => {
   });
 
   it("Initialize Round Counter", async () => {
-    const txn = await program.methods
+    await program.methods
       .initializeCounter()
       .accountsStrict({
         systemProgram: SYSTEM_PROGRAM_ID,
@@ -97,7 +97,7 @@ describe("Tests:TurboDash", () => {
       program.programId
     )[0];
 
-    const txn = await program.methods
+    await program.methods
       .createContest(contest_duration)
       .accountsStrict({
         contestCounter: getRoundCounterAccount(),
@@ -158,7 +158,7 @@ describe("Tests:TurboDash", () => {
       latestRound.account.id
     );
 
-    let txn = new anchor.web3.Transaction();
+    const txn = new anchor.web3.Transaction();
 
     const signature = await sign(MSG, serverKey.secretKey.slice(0, 32));
 
@@ -223,7 +223,7 @@ describe("Tests:TurboDash", () => {
       latestRound.account.id
     );
 
-    let txn = new anchor.web3.Transaction();
+    const txn = new anchor.web3.Transaction();
 
     const signature = await sign(MSG, serverKey.secretKey.slice(0, 32));
 
@@ -289,7 +289,7 @@ describe("Tests:TurboDash", () => {
       latestRound.account.id
     );
 
-    let txn = new anchor.web3.Transaction();
+    const txn = new anchor.web3.Transaction();
 
     const signature = await sign(MSG, serverKey.secretKey.slice(0, 32));
 
@@ -301,9 +301,6 @@ describe("Tests:TurboDash", () => {
 
     const FEES_IN_LAMPORT = new anchor.BN(5000000);
 
-    const beforeTxnPlayerState = await program.account.playerState.fetch(
-      derivedPlayerStatePubkey
-    );
     const ixn = await program.methods
       .refillLifetimes(
         FEES_IN_LAMPORT,
@@ -372,11 +369,6 @@ describe("Tests:TurboDash", () => {
       .signers([unauthorizedAdmin])
       .rpc();
 
-    const derivedPlayerStatePubkey = getPlayerStateAccount(
-      payer,
-      latestRound.account.id
-    );
-
     await new Promise((r) => setTimeout(r, 3000));
 
     try {
@@ -421,9 +413,6 @@ describe("Tests:TurboDash", () => {
   });
 
   it("Should update the config", async () => {
-    const allRounds = await program.account.contestState.all();
-    const latestRound = allRounds[0];
-
     const newServerKey = anchor.web3.Keypair.generate();
     await program.methods
       .processAdminAction({
@@ -446,9 +435,6 @@ describe("Tests:TurboDash", () => {
   });
 
   it("Should fail to update the config with an unauthorized admin key", async () => {
-    const allRounds = await program.account.contestState.all();
-    const latestRound = allRounds[0];
-
     const unauthorizedAdmin = anchor.web3.Keypair.generate();
 
     const airdropSignature = await provider.connection.requestAirdrop(
