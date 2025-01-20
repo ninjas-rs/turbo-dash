@@ -9,7 +9,7 @@ export const useCapsule = () => {
 
   const capsuleClient = new Capsule(
     Environment.BETA,
-    process.env.NEXT_PUBLIC_CAPSULE_API_KEY!
+    process.env.NEXT_PUBLIC_CAPSULE_API_KEY!,
   );
 
   const connection = new Connection("https://testnet.dev2.eclipsenetwork.xyz");

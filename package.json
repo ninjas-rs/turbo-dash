@@ -6,10 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "program:build": "cd program && anchor build",
+    "program:test": "cd program && anchor test"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@noble/ed25519": "1.6.0",
     "@solana/web3.js": "^1.98.0",
+    "@t3-oss/env-nextjs": "^0.11.1",
     "@usecapsule/react-sdk": "^4.17.0",
     "@usecapsule/solana-web3.js-v1-integration": "^1.17.0",
     "clsx": "^2.1.1",
@@ -19,6 +24,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-icons": "^5.4.0",
+    "zod": "^3.24.1",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
