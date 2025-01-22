@@ -105,7 +105,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   };
 
   const handleDeath = () => {
-    scene.events.emit("pause");
+    scene.events.emit("game-over");
     setDeathModalVisible(true);
   };
 
@@ -125,7 +125,6 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   };
 
   const scoreInc = (inc: number) => {
-    console.log(`Adding ${inc} points`);
     setSp((score) => score + inc);
   };
 

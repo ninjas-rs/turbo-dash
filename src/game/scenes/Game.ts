@@ -52,6 +52,7 @@ export class Game extends Scene {
   backgroundMusic!: Phaser.Sound.WebAudioSound;
   jumpSound!: Phaser.Sound.WebAudioSound;
   hitSound!: Phaser.Sound.WebAudioSound;
+  gameOverSound!: Phaser.Sound.WebAudioSound;
 
   // Misc
   spacebar!: Phaser.Input.Keyboard.Key;
@@ -134,7 +135,7 @@ export class Game extends Scene {
     const obstacle: ExtendedObstacle = this.obstacles.create(
       width,
       this.ground.y + (grassHeight - 24),
-      obstacleConf.type,
+      obstacleConf.type
     );
     obstacle.setScale(0.4, 0.4);
 
@@ -150,7 +151,7 @@ export class Game extends Scene {
 
     obstacle.body.setSize(
       obstacle.width - obstacleConf.hitboxOffset.width,
-      obstacle.height - obstacleConf.hitboxOffset.height,
+      obstacle.height - obstacleConf.hitboxOffset.height
     ); // make hitbox smaller than sprite
 
     this.lastObstacleTime = currentTime;
@@ -198,13 +199,13 @@ export class Game extends Scene {
     this.physics.add.collider(this.player, this.ground);
     this.obstacles = this.physics.add.group();
     this.physics.add.overlap(this.player, this.obstacles, (_, obstacle) =>
-      this.handleObstacleOverlap(obstacle as ExtendedObstacle),
+      this.handleObstacleOverlap(obstacle as ExtendedObstacle)
     );
   }
 
   setupInputs() {
     this.spacebar = this.input.keyboard!.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE,
+      Phaser.Input.Keyboard.KeyCodes.SPACE
     );
   }
 
@@ -221,7 +222,10 @@ export class Game extends Scene {
   }
 
   setupEventsFromReact() {
-    this.events.once("pause", () => {
+    this.events.once("game-over", () => {
+      this.backgroundMusic.stop();
+      this.gameOverSound.play();
+
       this.scene.pause();
     });
 
@@ -243,10 +247,13 @@ export class Game extends Scene {
 
   setupSound() {
     this.backgroundMusic = this.sound.add(
-      "background_music",
+      "background_music"
     ) as Phaser.Sound.WebAudioSound;
     this.jumpSound = this.sound.add("jump_sound") as Phaser.Sound.WebAudioSound;
     this.hitSound = this.sound.add("hit_sound") as Phaser.Sound.WebAudioSound;
+    this.gameOverSound = this.sound.add(
+      "game_over_sound"
+    ) as Phaser.Sound.WebAudioSound;
 
     this.backgroundMusic.play();
   }
@@ -281,7 +288,7 @@ export class Game extends Scene {
     this.player.x = Phaser.Math.Clamp(
       this.player.x,
       this.player.width * 2,
-      this.scale.width - this.player.width / 2,
+      this.scale.width - this.player.width / 2
     );
 
     // Controls
@@ -309,7 +316,7 @@ export class Game extends Scene {
     if (this.player.body.touching.down) {
       this.skidEmitter.setPosition(
         this.player.x,
-        this.player.y + this.player.height / 4,
+        this.player.y + this.player.height / 4
       );
       this.skidEmitter.start();
     } else {

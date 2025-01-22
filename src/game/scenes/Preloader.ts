@@ -43,6 +43,7 @@ export class Preloader extends Scene {
     this.load.audio("background_music", "background.mp3");
     this.load.audio("jump_sound", "jump.wav");
     this.load.audio("hit_sound", "hit.wav");
+    this.load.audio("game_over_sound", "game_over.mp3");
 
     this.createParticleTexture();
   }
