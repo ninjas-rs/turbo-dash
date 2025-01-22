@@ -221,22 +221,22 @@ export class Game extends Scene {
   }
 
   setupEventsFromReact() {
-    this.events.on("pause", () => {
+    this.events.once("pause", () => {
       this.scene.pause();
     });
 
-    this.events.on("resume", () => {
+    this.events.once("resume", () => {
       // we can have a backwards counter here maybe
       this.scene.resume();
     });
 
-    this.events.on("restart", () => {
-      this.sound.destroy();
+    this.events.once("restart", () => {
+      this.cleanup();
       this.scene.restart();
     });
 
-    this.events.on("back-to-main-menu", () => {
-      this.sound.destroy();
+    this.events.once("back-to-main-menu", () => {
+      this.cleanup();
       this.scene.start("MainMenu");
     });
   }
@@ -320,5 +320,20 @@ export class Game extends Scene {
     this.distance += (this.groundSpeed / 1000) * delta;
 
     this.handleDistanceUpdate();
+  }
+
+  cleanup() {
+    // Destroy sounds
+    this.backgroundMusic?.destroy();
+    this.jumpSound?.destroy();
+    this.hitSound?.destroy();
+
+    // Remove event listeners just in case
+    this.events.removeListener("restart");
+    this.events.removeListener("back-to-main-menu");
+  }
+
+  shutdown() {
+    this.cleanup();
   }
 }
