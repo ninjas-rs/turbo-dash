@@ -8,19 +8,20 @@ import Diagnostics from "@/components/diagnostics";
 import Preloader from "@/components/preloader";
 import MainMenu from "@/components/main-menu";
 import Game from "@/components/game";
+import CorrectSizeOverlay from "@/components/correct-size-overlay";
 
 const PhaserGame = dynamic<IPropsPhaserGame>(
   () => import("@/game/phaser-game"),
   {
     ssr: false,
     loading: () => <div className="h-screen w-screen bg-[#060A02]"></div>,
-  }
+  },
 );
 
 export default function Home() {
   const phaserRef = useRef<IRefPhaserGame>(null);
   const [scene, setScene] = useState<Phaser.Scene | null>(null);
- 
+
   const DynamicUI = () => {
     switch (scene?.scene.key) {
       case "Preloader":
@@ -41,6 +42,7 @@ export default function Home() {
       </div>
 
       {process.env.NODE_ENV !== "production" && <Diagnostics scene={scene} />}
+      <CorrectSizeOverlay />
       <PhaserGame ref={phaserRef} setScene={setScene} />
     </div>
   );
