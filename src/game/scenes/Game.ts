@@ -246,9 +246,9 @@ export class Game extends Scene {
   }
 
   setupSound() {
-    this.backgroundMusic = this.sound.add(
-      "background_music"
-    ) as Phaser.Sound.WebAudioSound;
+    this.backgroundMusic = this.sound.add("background_music", {
+      loop: true,
+    }) as Phaser.Sound.WebAudioSound;
     this.jumpSound = this.sound.add("jump_sound") as Phaser.Sound.WebAudioSound;
     this.hitSound = this.sound.add("hit_sound") as Phaser.Sound.WebAudioSound;
     this.gameOverSound = this.sound.add(
