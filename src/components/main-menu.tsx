@@ -3,6 +3,7 @@ import PixelatedCard from "./pixelated-card";
 import WalletState from "./wallet-state";
 import { Button, Card } from "pixel-retroui";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
+import { useState } from "react";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 
 const Mock = [
@@ -92,12 +93,79 @@ function Season() {
   );
 }
 
+
+function ChargeModal({ onClose }) {
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <Card
+        bg="#239B3F"
+        borderColor="#26541B"
+        shadowColor="#59b726"
+        className="flex flex-col p-2 pointer-events-auto"
+      >
+        <h2 className="z-50 text-2xl text-[#671919] mb-4">
+          Insufficient balance!
+        </h2>
+        <p className="pb-4">
+          To start the game, you must have a minimum balance of 0.2$!
+        </p>
+        <p className="text-center text-xl pb-3">Get lives</p>
+        <div className="flex flex-row w-full pb-8">
+          <Button
+            bg="transparent"
+            shadow="#429e34"
+            className="p-4 text-sm w-1/3"
+          >
+            <p className="text-xl">0.2$</p> (1 life)
+          </Button>
+          <Button
+            bg="transparent"
+            shadow="#429e34"
+            className="p-4 text-sm w-1/3"
+          >
+            <p className="text-xl">0.5$</p> (3 lives)
+          </Button>
+          <Button
+            bg="transparent"
+            shadow="#429e34"
+            className="p-4 text-sm w-1/3"
+          >
+            <p className="text-xl">1$</p> (6 lives)
+          </Button>
+        </div>
+
+        <Button
+          bg="transparent"
+          shadow="#429e34"
+          className="space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
+          onClick={onClose}
+        >
+          <p>Exit to MainMenu</p> <BsArrowRight />
+        </Button>
+      </Card>
+    </div>
+  );
+}
+
+
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
+  const { isActive, balanceUsd } = useCapsuleStore();
+  const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
+
   const handleJoin = () => {
+    console.log("Balance: ", balanceUsd);
+
+    // string to float
+    const balance = parseFloat(balanceUsd || "0");
+    if (balance < 0.2) {
+      // open dead modal
+      setIsRechargeModalOpen(true);
+    }
+
+
+    return
     scene.scene.start("Game");
   };
-
-  const { isActive } = useCapsuleStore();
 
   return (
     <div className="h-full w-full bg-[url('/assets/main_menu_bg.svg')] bg-cover bg-center bg-no-repeat flex flex-col p-8">
@@ -111,7 +179,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
             alt="Game Logo"
           />
         </div>
-
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
           <WalletState text="Sign in to Play" />
         </div>
@@ -145,6 +212,10 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
         <Season />
       </div>
+
+      {isRechargeModalOpen && (
+        <ChargeModal onClose={() => setIsRechargeModalOpen(false)} />
+      )}
     </div>
   );
 }
