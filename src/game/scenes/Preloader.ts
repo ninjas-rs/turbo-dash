@@ -40,9 +40,11 @@ export class Preloader extends Scene {
     this.load.image("coffin", "coffin.png");
     this.load.image("grave_1", "grave_1.png");
     this.load.image("grave_2", "grave_2.png");
+    this.load.audio("main_menu_music", "game_over.mp3"); // TODO(@abheek): Replace with main menu music
     this.load.audio("background_music", "background.mp3");
     this.load.audio("jump_sound", "jump.wav");
     this.load.audio("hit_sound", "hit.wav");
+    this.load.audio("game_over_sound", "game_over.mp3");
 
     this.createParticleTexture();
   }
