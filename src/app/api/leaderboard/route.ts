@@ -4,16 +4,13 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider } from "@coral-xyz/anchor";
 import { TurbodashIdl } from "@/config/idl";
 
-// Enable edge runtime since Upstash is edge compatible
 export const runtime = "edge";
 
-// Initialize Upstash Redis client
 const redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL!,
     token: process.env.UPSTASH_REDIS_REST_TOKEN!
 });
 
-// Initialize Solana connection
 const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT);
 
 const CACHE_KEY_PREFIX = "turbodash:leaderboard:";
@@ -102,42 +99,12 @@ export async function GET(request: Request) {
 
         return NextResponse.json({
             contestId,
-            updatedAt: new Date().toISOString(),
             fromCache: !forceRefresh && leaderboard !== null,
             data: leaderboard
         });
 
     } catch (error) {
         console.error("Error in leaderboard API:", error);
-        return NextResponse.json(
-            { error: "Internal server error" },
-            { status: 500 }
-        );
-    }
-}
-
-export async function POST(request: Request) {
-    try {
-        const { contestId } = await request.json();
-
-        if (typeof contestId !== "number") {
-            return NextResponse.json(
-                { error: "Invalid contest ID" },
-                { status: 400 }
-            );
-        }
-
-        const leaderboard = await fetchFromChain(contestId);
-        await cacheLeaderboard(contestId, leaderboard);
-
-        return NextResponse.json({
-            contestId,
-            updatedAt: new Date().toISOString(),
-            data: leaderboard
-        });
-
-    } catch (error) {
-        console.error("Error in leaderboard refresh:", error);
         return NextResponse.json(
             { error: "Internal server error" },
             { status: 500 }
