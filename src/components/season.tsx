@@ -13,22 +13,40 @@ interface ContestDetails {
   playerRank?: number;
 }
 
-const formatTimeRemaining = (endTime: number): string => {
-  const now = Date.now() / 1000;
-  const remaining = endTime - now;
-  
-  if (remaining <= 0) return "ENDED";
-  
-  const hours = Math.floor(remaining / 3600);
-  const minutes = Math.floor((remaining % 3600) / 60);
-  const seconds = Math.floor(remaining % 60);
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+interface TimeLeft {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isExpired: boolean;
+}
+
+const calculateTimeLeft = (endTime: number): TimeLeft => {
+  const now = Math.floor(Date.now() / 1000); // Current time in seconds
+  const difference = endTime - now;
+
+  if (difference <= 0) {
+    return {
+      days: 0,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isExpired: true
+    };
+  }
+
+  return {
+    days: Math.floor(difference / 86400),
+    hours: Math.floor((difference % 86400) / 3600),
+    minutes: Math.floor((difference % 3600) / 60),
+    seconds: Math.floor(difference % 60),
+    isExpired: false
+  };
 };
 
 function Season() {
   const [contestDetails, setContestDetails] = useState<ContestDetails | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -37,9 +55,7 @@ function Season() {
         const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT!);
         const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
-        // Get counter account to find latest contest ID
         const counterPDA = getRoundCounterAccount();
-
         const counterAccount = await connection.getAccountInfo(counterPDA);
         
         if (!counterAccount) {
@@ -48,7 +64,6 @@ function Season() {
           return;
         }
 
-        // Parse counter (skip 8 bytes discriminator)
         const count = new BN(counterAccount.data.slice(8), 'le').toNumber();
         
         if (count === 0) {
@@ -57,7 +72,6 @@ function Season() {
           return;
         }
 
-        // Get global account for authority
         const globalPDA = getGlobalAccount();
         const globalAccount = await connection.getAccountInfo(globalPDA);
         
@@ -68,8 +82,6 @@ function Season() {
         }
 
         const authority = new PublicKey(globalAccount.data.slice(8, 40));
-
-        // Get latest contest PDA
         const latestContestId = count - 1;
         const [contestPDA] = PublicKey.findProgramAddressSync(
           [
@@ -80,7 +92,6 @@ function Season() {
           programId
         );
 
-        // Fetch latest contest account
         const contestAccount = await connection.getAccountInfo(contestPDA);
         
         if (!contestAccount) {
@@ -89,20 +100,17 @@ function Season() {
           return;
         }
 
-        // Parse contest data (skip 8 bytes discriminator)
         const data = contestAccount.data;
         const details: ContestDetails = {
-          startTime: new BN(data.slice(48, 56), 'le').toNumber(),  // Added startTime
-          endTime: new BN(data.slice(56, 64), 'le').toNumber(),    // Fixed endTime offset
+          startTime: new BN(data.slice(48, 56), 'le').toNumber(),
+          endTime: new BN(data.slice(56, 64), 'le').toNumber(),
           prizePool: new BN(data.slice(64, 72), 'le').toNumber() / LAMPORTS_PER_SOL,
           highestScore: new BN(data.slice(72, 80), 'le').toNumber(),
           totalParticipants: new BN(data.slice(144, 152), 'le').toNumber()
         };
 
-        console.log("Contest details:", details);
-
         setContestDetails(details);
-        setTimeRemaining(formatTimeRemaining(details.endTime));
+        setTimeLeft(calculateTimeLeft(details.endTime));
       } catch (error) {
         console.error("Error fetching contest details:", error);
       } finally {
@@ -112,14 +120,16 @@ function Season() {
 
     fetchContestDetails();
     
+    // Update countdown every second
     const timer = setInterval(() => {
       if (contestDetails?.endTime) {
-        setTimeRemaining(formatTimeRemaining(contestDetails.endTime));
+        const newTimeLeft = calculateTimeLeft(contestDetails.endTime);
+        setTimeLeft(newTimeLeft);
       }
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [contestDetails?.endTime]);
 
   if (loading) {
     return (
@@ -131,7 +141,7 @@ function Season() {
     );
   }
 
-  if (!contestDetails) {
+  if (!contestDetails || !timeLeft) {
     return (
       <PixelatedCard>
         <div className="flex flex-col items-center justify-center">
@@ -146,7 +156,28 @@ function Season() {
       <div className="flex flex-col items-center justify-center">
         <h1 className="py-4">EARLY WINTER ARC</h1>
         <p>season ends in</p>
-        <h2 className="text-3xl text-bold">{timeRemaining}</h2>
+        {timeLeft.isExpired ? (
+          <h2 className="text-3xl font-bold text-red-500">SEASON ENDED</h2>
+        ) : (
+          <div className="grid grid-cols-4 gap-4 text-center my-2">
+            <div>
+              <div className="text-3xl font-bold">{timeLeft.days}</div>
+              <div className="text-sm">days</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold">{timeLeft.hours.toString().padStart(2, '0')}</div>
+              <div className="text-sm">hrs</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+              <div className="text-sm">min</div>
+            </div>
+            <div>
+              <div className="text-3xl font-bold">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+              <div className="text-sm">sec</div>
+            </div>
+          </div>
+        )}
         <br />
         <p>current rank</p>
         <h2 className="text-3xl text-bold">
