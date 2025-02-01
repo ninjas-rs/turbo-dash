@@ -1,6 +1,6 @@
 import { Button, Card } from "pixel-retroui";
 import { useEffect, useState } from "react";
-import WalletState from "./wallet-state";
+import WalletState, { WalletModal } from "./wallet-state";
 import { BsArrowRight } from "react-icons/bs";
 
 const DEFAULT_LIVES = 3;
@@ -15,10 +15,21 @@ type ClickHandler = () => void;
 function DeathModal({
   restart,
   backToMainMenu,
+  capsuleClient,
 }: {
   restart: ClickHandler;
   backToMainMenu: ClickHandler;
 }) {
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+
+  const handleChargeClick = () => {
+    setIsWalletOpen(true);
+  };
+
+  const handleWalletClose = () => {
+    setIsWalletOpen(false);
+  };
+
   return (
     <Card
       bg="#239B3F"
@@ -40,7 +51,7 @@ function DeathModal({
           bg="transparent"
           shadow="#429e34"
           className="p-4 text-sm w-1/3"
-          onClick={backToMainMenu}
+          onClick={handleChargeClick}
         >
           <p className="text-xl"> 0.2$</p> (1 life)
         </Button>
@@ -48,7 +59,7 @@ function DeathModal({
           bg="transparent"
           shadow="#429e34"
           className="p-4 text-sm w-1/3"
-          onClick={backToMainMenu}
+          onClick={handleChargeClick}
         >
           <p className="text-xl"> 0.5$</p> (3 lives)
         </Button>
@@ -78,6 +89,13 @@ function DeathModal({
       >
         <p>Exit to MainMenu</p> <BsArrowRight className="" />
       </Button>
+
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={handleWalletClose}
+        capsuleClient={capsuleClient}
+      />
+
     </Card>
   );
 }

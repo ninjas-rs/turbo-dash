@@ -8,38 +8,37 @@ import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { useCapsule } from "@/hooks/useCapsule";
 
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { getGlobalAccount, getPlayerStateAccount, getRoundCounterAccount } from "@/utils/pdas";
+import { getPlayerStateAccount } from "@/utils/pdas";
 import { getPlayerStateAsJSON } from "@/utils/transactions";
-import { BN } from '@coral-xyz/anchor';
 
 import Season from "./season";
 
-const Mock = [
-  {
-    address: "0x4r...897",
-    score: 1000,
-  },
-  {
-    address: "0x4r...897",
-    score: 1000,
-  },
-  {
-    address: "0x4r...897",
-    score: 1000,
-  },
-  {
-    address: "0x4r...897",
-    score: 1000,
-  },
-  {
-    address: "0x4r...897",
-    score: 1000,
-  },
-  {
-    address: "0x4r...897",
-    score: 1000,
-  },
-];
+// const Mock = [
+//   {
+//     address: "0x4r...897",
+//     score: 1000,
+//   },
+//   {
+//     address: "0x4r...897",
+//     score: 1000,
+//   },
+//   {
+//     address: "0x4r...897",
+//     score: 1000,
+//   },
+//   {
+//     address: "0x4r...897",
+//     score: 1000,
+//   },
+//   {
+//     address: "0x4r...897",
+//     score: 1000,
+//   },
+//   {
+//     address: "0x4r...897",
+//     score: 1000,
+//   },
+// ];
 
 const LoadingButton = ({ onClick, loading }) => {
   return (
@@ -65,37 +64,68 @@ const LoadingButton = ({ onClick, loading }) => {
   );
 };
 
+const formatAddress = (address: string) => {
+  if (!address) return '';
+  return `${address.slice(0, 4)}...${address.slice(-4)}`;
+};
+
+const formatScore = (score: number) => {
+  return score.toLocaleString();
+};
+
 function Leaderboard() {
+  const [leaderboard, setLeaderboard] = useState([]);
+  
+  function fetchLeaderboard() {
+    fetch("/api/leaderboard")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.data && data.data.length > 0) {
+          setLeaderboard(data.data);
+        }
+      });
+  }
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, []);
+
   return (
     <PixelatedCard>
       <Card
         textColor="black"
-        shadowColor="#59b726 "
+        shadowColor="#59b726"
         borderColor="#26541B"
         bg="#239B3F"
-        className="!border-0 w-[70%] mb-3 p-1 text-sm text-center flex flex-row justify-between items-center"
+        className="!border-0 w-[70%] mb-3 p-1 text-sm text-center"
       >
-        <h2>Address</h2>
-        <h2>Score</h2>
+        <div className="grid grid-cols-3 w-full items-center px-2">
+          <h2 className="text-left">Rank</h2>
+          <h2>Address</h2>
+          <h2 className="text-right">Score</h2>
+        </div>
       </Card>
       <div className="flex flex-col space-y-2 w-[70%] mx-auto">
-        {Mock.map((item, index) => {
+        {leaderboard.map((item, index) => {
           return (
             <Card
               key={index}
               bg="#239B3F"
               textColor="black"
-              shadowColor="#59b726 "
+              shadowColor="#59b726"
               borderColor="#26541B"
-              className="mx-auto w-[90%] p-1 text-sm text-center flex flex-row justify-between items-center"
+              className="mx-auto w-[90%] p-1 text-sm"
             >
-              <h2>{item.address}</h2>
-              <h2>{item.score}</h2>
+              <div className="grid grid-cols-3 w-full items-center px-2">
+                <span className="text-left font-bold">#{index + 1}</span>
+                <span className="text-center font-mono">{formatAddress(item.address)}</span>
+                <span className="text-right tabular-nums">{formatScore(item.score)}</span>
+              </div>
             </Card>
           );
         })}
       </div>
-      <div className="relative bottom-0 right-0 flex flex-row space-x-2">
+      <div className="relative bottom-0 right-0 flex flex-row space-x-2 mt-4">
         <Button bg="#59b726">
           <BsArrowLeft />
         </Button>
@@ -106,6 +136,7 @@ function Leaderboard() {
     </PixelatedCard>
   );
 }
+
 
 export function ChargeModal({ onClose, capsuleClient }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
@@ -196,6 +227,16 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
     }
   }, [isActive, balanceUsd]);
 
+  const getCurrentContest = async () => {
+    const response = await fetch('/api/current-contest');
+    if (!response.ok) {
+      throw new Error('Failed to get current contest');
+    }
+
+    const { contestId } = await response.json();
+    return contestId;
+  };
+
   const joinContest = async () => {
     // If already initialized or no signer, return early
     if (hasInitialized.current || !signer?.address) return;
@@ -203,9 +244,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
     try {
       const pubkey = new PublicKey(signer.address);
       const playerStateAccount = getPlayerStateAccount(pubkey, 0);
-
-      const playerStateData = await getPlayerStateAsJSON(connection, playerStateAccount);
-      console.log("Player state: ", playerStateData);
 
       // No player state found, join contest
       const response = await fetch('/api/join-contest', {

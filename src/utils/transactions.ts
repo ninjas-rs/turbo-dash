@@ -1,6 +1,6 @@
-import {LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, Connection } from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
-
 
 /**
  * 
@@ -48,33 +48,56 @@ import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integrati
  * use this on every obstacle passed 
  */
 export const sendTestSolanaTransaction = async (solanaSigner: CapsuleSolanaWeb3Signer) => {
-    try {
-      const transaction = new Transaction();
-      transaction.feePayer = solanaSigner.sender!;
-      transaction.add(
-        SystemProgram.transfer({
-          fromPubkey: solanaSigner.sender!,
-          toPubkey: new PublicKey(
-            "5mKstYSwoa5eMyLijKL42CL2k9ASMsTJ7sGApKNB477F",
-          ),
-          lamports: LAMPORTS_PER_SOL * 0.00001,
-        }),
-      );
+  try {
+    const transaction = new Transaction();
+    transaction.feePayer = solanaSigner.sender!;
+    transaction.add(
+      SystemProgram.transfer({
+        fromPubkey: solanaSigner.sender!,
+        toPubkey: new PublicKey(
+          "5mKstYSwoa5eMyLijKL42CL2k9ASMsTJ7sGApKNB477F",
+        ),
+        lamports: LAMPORTS_PER_SOL * 0.00001,
+      }),
+    );
 
-      const signature = await solanaSigner.sendTransaction(transaction, {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
-      });
+    const signature = await solanaSigner.sendTransaction(transaction, {
+      skipPreflight: false,
+      preflightCommitment: "confirmed",
+    });
 
-      console.log("Transaction sent successfully!");
-      console.log("Signature:", signature);
-      console.log(
-        `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`,
-      );
+    console.log("Transaction sent successfully!");
+    console.log("Signature:", signature);
+    console.log(
+      `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`,
+    );
 
-      return signature;
-    } catch (error) {
-      console.error("Error in sending transaction:", error);
-      throw error;
-    }
+    return signature;
+  } catch (error) {
+    console.error("Error in sending transaction:", error);
+    throw error;
+  }
+};
+
+export const getPlayerStateAsJSON = async (
+  connection: Connection,
+  playerStateAddress: PublicKey
+) => {
+  const accountInfo = await connection.getAccountInfo(playerStateAddress);
+  
+  if (!accountInfo) {
+    return null; // Account doesn't exist
+  }
+
+  // Skip the 8-byte discriminator
+  const data = accountInfo.data.slice(8);
+  
+  // Decode the data according to the PlayerState layout:
+  const playerState = {
+    owner: new PublicKey(data.slice(0, 32)).toString(),  // 32 bytes - Pubkey
+    contestId: new BN(data.slice(32, 40), 'le').toNumber(),  // 8 bytes - u64
+    currentScore: new BN(data.slice(40, 48), 'le').toNumber()  // 8 bytes - u64
   };
+
+  return playerState;
+};

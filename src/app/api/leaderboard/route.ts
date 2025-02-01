@@ -13,7 +13,7 @@ const redis = new Redis({
 
 const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT);
 
-const CACHE_KEY_PREFIX = "turbodash:leaderboard:";
+const CACHE_KEY_PREFIX = "turbodash:leaderboard:contestId:";
 const CACHE_DURATION = 24 * 60 * 60;
 
 interface LeaderboardEntry {
@@ -23,7 +23,7 @@ interface LeaderboardEntry {
     contestId: number;
 }
 
-async function fetchFromChain(contestId: number): Promise<LeaderboardEntry[]> {
+async function fetchFromChain(contestId: number) : Promise<LeaderboardEntry[]> {
     try {
         const provider = new AnchorProvider(
             connection,
@@ -41,13 +41,27 @@ async function fetchFromChain(contestId: number): Promise<LeaderboardEntry[]> {
 
         const program = new Program(TurbodashIdl, provider);
         const allAccounts = await program.account.playerState.all();
+
+        if (contestId === -1) {
+            // get latest contest ID
+            const allContests = await program.account.contestState.all();
+            if (allContests.length === 0) {
+                return [];
+            }
+
+            const latestContest = allContests[allContests.length - 1];
+            contestId = latestContest.account.id.toNumber();
+        }
+
         const playerAccounts = allAccounts.filter(account =>
-            account.account.contestId === contestId
+            account.account.contestId.toNumber() == contestId
         );
+
+        console.log("Fetched player accounts:", playerAccounts);
 
         return playerAccounts
             .map(account => ({
-                player: account.account.owner.toString(),
+                address: account.account.owner.toString(),
                 score: account.account.currentScore.toNumber(),
                 contestId: account.account.contestId
             }))
@@ -55,14 +69,14 @@ async function fetchFromChain(contestId: number): Promise<LeaderboardEntry[]> {
             .map((entry, index) => ({
                 ...entry,
                 rank: index + 1
-            }));
+            })) ;
     } catch (error) {
         console.error("Error fetching from chain:", error);
         throw error;
     }
 }
 
-async function getCachedLeaderboard(contestId: number): Promise<LeaderboardEntry[] | null> {
+async function getCachedLeaderboard(contestId: number): (Promise<LeaderboardEntry[] | null>) {
     const cacheKey = `${CACHE_KEY_PREFIX}${contestId}`;
     const cached = await redis.get(cacheKey);
     return cached || null;
@@ -76,7 +90,7 @@ async function cacheLeaderboard(contestId: number, data: LeaderboardEntry[]): Pr
 export async function GET(request: Request) {
     try {
         const { searchParams } = new URL(request.url);
-        const contestId = parseInt(searchParams.get("contestId") || "0");
+        let contestId = parseInt(searchParams.get("contestId") || "-1");
         const forceRefresh = searchParams.get("refresh") === "true";
 
         if (isNaN(contestId)) {
@@ -88,8 +102,13 @@ export async function GET(request: Request) {
 
         let leaderboard: LeaderboardEntry[] | null = null;
 
+        let fromCache = false;
+
         if (!forceRefresh) {
             leaderboard = await getCachedLeaderboard(contestId);
+            if (leaderboard) {
+                fromCache = true;
+            }
         }
 
         if (!leaderboard) {
@@ -98,8 +117,7 @@ export async function GET(request: Request) {
         }
 
         return NextResponse.json({
-            contestId,
-            fromCache: !forceRefresh && leaderboard !== null,
+            fromCache: fromCache,
             data: leaderboard
         });
 
