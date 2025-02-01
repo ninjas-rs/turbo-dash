@@ -8,8 +8,9 @@ import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { useCapsule } from "@/hooks/useCapsule";
 
 import { PublicKey, Transaction } from '@solana/web3.js';
-import { getPlayerStateAccount } from "@/utils/pdas";
+import { getGlobalAccount, getPlayerStateAccount, getRoundCounterAccount } from "@/utils/pdas";
 import { getPlayerStateAsJSON } from "@/utils/transactions";
+import { BN } from '@coral-xyz/anchor';
 
 import Season from "./season";
 
@@ -39,6 +40,30 @@ const Mock = [
     score: 1000,
   },
 ];
+
+const LoadingButton = ({ onClick, loading }) => {
+  return (
+    <div className="relative inline-block">
+      <button
+        className={`bg-none pointer-events-auto transition-opacity duration-200 ${loading ? 'opacity-50' : ''}`}
+        onClick={onClick}
+        disabled={loading}
+      >
+        <Image
+          src={"/assets/start.png"}
+          alt="start"
+          width={180}
+          height={60}
+        />
+      </button>
+      {loading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 function Leaderboard() {
   return (
@@ -81,25 +106,6 @@ function Leaderboard() {
     </PixelatedCard>
   );
 }
-
-// function Season() {
-//   return (
-//     <PixelatedCard>
-//       <div className="flex flex-col items-center justify-center">
-//         <h1 className="py-4">EARLY WINTER ARC</h1>
-//         <p>season ends in</p>
-//         <h2 className="text-3xl text-bold">23:12:123</h2>
-//         <br />
-//         <p>current rank</p>
-//         <h2 className="text-3xl text-bold">190th</h2>
-//         <br />
-//         <p>total rewards in pot</p>
-//         <h2 className="text-3xl text-bold">1238$</h2>
-//       </div>
-//     </PixelatedCard>
-//   );
-// }
-
 
 export function ChargeModal({ onClose, capsuleClient }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
@@ -181,6 +187,15 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    // while the wallet is not connected, keep loading true
+    if (!isActive || (balanceUsd === null || balanceUsd === undefined)) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [isActive, balanceUsd]);
+
   const joinContest = async () => {
     // If already initialized or no signer, return early
     if (hasInitialized.current || !signer?.address) return;
@@ -248,26 +263,45 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const hasInitialized = useRef(false);
 
   const handleJoin = async () => {
-    console.log("Balance: ", balanceUsd);
+    try {
+      setLoading(true);
+      console.log("Balance: ", balanceUsd);
 
-    const balance = parseFloat(balanceUsd || "0");
-    if (balance < 0.2) {
-      setIsRechargeModalOpen(true);
-      return;
-    }
+      const balance = parseFloat(balanceUsd || "0");
+      if (balance < 0.2) {
+        setIsRechargeModalOpen(true);
+        return;
+      }
 
-    if (!isActive || !capsuleClient) {
-      console.error("Wallet not connected");
-      return;
-    }
+      if (!isActive || !capsuleClient || !signer?.address) {
+        console.error("Wallet not connected");
+        return;
+      }
 
-    // const joined = await joinContest();
-    const joined = await joinContest();
+      const pubkey = new PublicKey(signer.address);
+      const playerStateAccount = getPlayerStateAccount(pubkey, 0);
 
-    if (joined) {
-      scene.scene.start("Game");
-    } else {
-      console.error("Failed to join contest");
+      try {
+        // Check if player has already joined
+        const existingPlayerState = await getPlayerStateAsJSON(connection, playerStateAccount);
+        console.log("Found existing player state:", existingPlayerState);
+        // If we get here, player has already joined
+        scene.scene.start("Game");
+        return;
+      } catch (error) {
+        // If player state doesn't exist, join the contest
+        console.log("Player hasn't joined yet, joining contest...");
+        const joined = await joinContest();
+        if (joined) {
+          scene.scene.start("Game");
+        } else {
+          console.error("Failed to join contest");
+        }
+      }
+    } catch (error) {
+      console.error("Error in handleJoin:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -292,18 +326,19 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         <Leaderboard />
         <div className="flex flex-col items-center justify-center space-y-8">
           {isActive ? (
-            <button
-              className="bg-none pointer-events-auto"
-              onClick={handleJoin}
-              disabled={loading}
-            >
-              <Image
-                src={"/assets/start.png"}
-                alt="start"
-                width={180}
-                height={60}
-              />
-            </button>
+            // <button
+            //   className="bg-none pointer-events-auto"
+            //   onClick={handleJoin}
+            //   disabled={loading}
+            // >
+            //   <Image
+            //     src={"/assets/start.png"}
+            //     alt="start"
+            //     width={180}
+            //     height={60}
+            //   />
+            // </button>
+            <LoadingButton onClick={handleJoin} loading={loading} />
           ) : (
             <WalletState mainMenu={true} />
           )}

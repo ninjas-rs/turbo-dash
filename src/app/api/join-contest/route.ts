@@ -81,7 +81,7 @@ export const POST = async (req: NextRequest) => {
             return res.json({ error: 'No active contests found' }, { status: 404 });
         }
 
-        const latestContest = allContests[0];
+        const latestContest = allContests[allContests.length - 1];
 
         // Get PDAs
         const playerStatePubkey = getPlayerStateAccount(
