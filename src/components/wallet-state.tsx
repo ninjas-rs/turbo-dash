@@ -1,10 +1,9 @@
 "use client";
 
 import { Button, Card } from "pixel-retroui";
-import clsx from "clsx";
 import { CapsuleModal, OAuthMethod } from "@usecapsule/react-sdk";
 import "@usecapsule/react-sdk/styles.css";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCapsule } from "@/hooks/useCapsule";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { LuWalletMinimal } from "react-icons/lu";
@@ -56,8 +55,12 @@ export default function WalletState({
   mainMenu,
 }: WalletStateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { capsuleClient, initialize } = useCapsule();
   const { isActive, signer, balanceUsd, balance } = useCapsuleStore();
+  const { capsuleClient, initialize } = useCapsule();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   const truncatedAddress = useMemo(() => {
     if (!signer) return "";
@@ -67,9 +70,10 @@ export default function WalletState({
   const handleModalClose = () => {
     setIsModalOpen(false);
     // give it 0.2 seconds to initialize
-    setTimeout(() => {
-      initialize();
-    }, 200);
+    // setTimeout(() => {
+    //   initialize();
+    // }, 200);
+    // initialize();
   };
 
   if (mainMenu && !isActive) {

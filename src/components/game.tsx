@@ -2,6 +2,9 @@ import { Button, Card } from "pixel-retroui";
 import { useEffect, useState } from "react";
 import WalletState, { WalletModal } from "./wallet-state";
 import { BsArrowRight } from "react-icons/bs";
+import { useCapsule } from "@/hooks/useCapsule";
+import { Transaction } from "@solana/web3.js";
+import { useCapsuleStore } from "@/stores/useCapsuleStore";
 
 const DEFAULT_LIVES = 3;
 
@@ -15,12 +18,23 @@ type ClickHandler = () => void;
 function DeathModal({
   restart,
   backToMainMenu,
-  capsuleClient,
 }: {
   restart: ClickHandler;
   backToMainMenu: ClickHandler;
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
+
+  const { capsuleClient, initialize } = useCapsule();
+
+  // Initialize capsuleClient
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  // make sure capsuleClient is valid
+  if (!capsuleClient) {
+    return null;
+  }
 
   const handleChargeClick = () => {
     setIsWalletOpen(true);
@@ -102,7 +116,62 @@ function DeathModal({
 
 export default function Game({ scene }: { scene: Phaser.Scene }) {
   const [lives, setLives] = useState(makeLives(DEFAULT_LIVES));
+  const { signer, isActive } = useCapsuleStore();
   const [sp, setSp] = useState(0);
+
+  useEffect(() => {
+    if (sp === 0) return;
+
+    const recordProgress = async () => {
+      try {
+        if (!signer) {
+          console.error("No wallet connected or no score to record");
+          return;
+        }
+
+        if (!signer?.address) {
+          console.error("No wallet connected");
+          return;
+        }
+
+        // Call record-progress API
+        const response = await fetch('/api/record-progress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userPubKey: signer?.address,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to record progress');
+        }
+
+        const { txn } = await response.json();
+
+        // Deserialize and send transaction
+        const transaction = Transaction.from(Buffer.from(txn, 'base64'));
+        
+        const signature = await signer.sendTransaction(transaction, {
+          skipPreflight: false,
+          preflightCommitment: "confirmed",
+        });
+
+        console.log("Successfully recorded progress!");
+        console.log("Transaction signature:", signature);
+        console.log(
+          `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
+        );
+
+      } catch (error) {
+        console.error("Error recording progress:", error);
+      }
+    };
+
+    recordProgress();
+  }, [sp]);
 
   const [deathModalVisible, setDeathModalVisible] = useState(false);
 
