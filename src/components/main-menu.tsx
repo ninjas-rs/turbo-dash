@@ -1,10 +1,17 @@
 import Image from "next/image";
 import PixelatedCard from "./pixelated-card";
-import WalletState from "./wallet-state";
+import WalletState, { WalletModal } from "./wallet-state";
 import { Button, Card } from "pixel-retroui";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
+import { useCapsule } from "@/hooks/useCapsule";
+
+import { PublicKey, Transaction } from '@solana/web3.js';
+import { getPlayerStateAccount } from "@/utils/pdas";
+import { getPlayerStateAsJSON } from "@/utils/transactions";
+
+import Season from "./season";
 
 const Mock = [
   {
@@ -75,96 +82,193 @@ function Leaderboard() {
   );
 }
 
-function Season() {
+// function Season() {
+//   return (
+//     <PixelatedCard>
+//       <div className="flex flex-col items-center justify-center">
+//         <h1 className="py-4">EARLY WINTER ARC</h1>
+//         <p>season ends in</p>
+//         <h2 className="text-3xl text-bold">23:12:123</h2>
+//         <br />
+//         <p>current rank</p>
+//         <h2 className="text-3xl text-bold">190th</h2>
+//         <br />
+//         <p>total rewards in pot</p>
+//         <h2 className="text-3xl text-bold">1238$</h2>
+//       </div>
+//     </PixelatedCard>
+//   );
+// }
+
+
+export function ChargeModal({ onClose, capsuleClient }) {
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+
+  const handleChargeClick = () => {
+    setIsWalletOpen(true);
+  };
+
+  const handleWalletClose = () => {
+    setIsWalletOpen(false);
+  };
+
   return (
-    <PixelatedCard>
-      <div className="flex flex-col items-center justify-center">
-        <h1 className="py-4">EARLY WINTER ARC</h1>
-        <p>season ends in</p>
-        <h2 className="text-3xl text-bold">23:12:123</h2>
-        <br />
-        <p>current rank</p>
-        <h2 className="text-3xl text-bold">190th</h2>
-        <br />
-        <p>total rewards in pot</p>
-        <h2 className="text-3xl text-bold">1238$</h2>
-      </div>
-    </PixelatedCard>
-  );
-}
-
-
-function ChargeModal({ onClose }) {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <Card
-        bg="#239B3F"
-        borderColor="#26541B"
-        shadowColor="#59b726"
-        className="flex flex-col p-2 pointer-events-auto"
-      >
-        <h2 className="z-50 text-2xl text-[#671919] mb-4">
-          Insufficient balance!
-        </h2>
-        <p className="pb-4">
-          To start the game, you must have a minimum balance of 0.2$!
-        </p>
-        <p className="text-center text-xl pb-3">Get lives</p>
-        <div className="flex flex-row w-full pb-8">
-          <Button
-            bg="transparent"
-            shadow="#429e34"
-            className="p-4 text-sm w-1/3"
-          >
-            <p className="text-xl">0.2$</p> (1 life)
-          </Button>
-          <Button
-            bg="transparent"
-            shadow="#429e34"
-            className="p-4 text-sm w-1/3"
-          >
-            <p className="text-xl">0.5$</p> (3 lives)
-          </Button>
-          <Button
-            bg="transparent"
-            shadow="#429e34"
-            className="p-4 text-sm w-1/3"
-          >
-            <p className="text-xl">1$</p> (6 lives)
-          </Button>
-        </div>
-
-        <Button
-          bg="transparent"
-          shadow="#429e34"
-          className="space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
-          onClick={onClose}
+    <>
+      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <Card
+          bg="#239B3F"
+          borderColor="#26541B"
+          shadowColor="#59b726"
+          className="flex flex-col p-2 pointer-events-auto"
         >
-          <p>Exit to MainMenu</p> <BsArrowRight />
-        </Button>
-      </Card>
-    </div>
+          <h2 className="z-50 text-2xl text-[#671919] mb-4">
+            Insufficient balance!
+          </h2>
+          <p className="pb-4">
+            To start the game, you must have a minimum balance of 0.2$!
+          </p>
+          <p className="text-center text-xl pb-3">Get lives</p>
+          <div className="flex flex-row w-full pb-8">
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              className="p-4 text-sm w-1/3"
+              onClick={handleChargeClick}
+            >
+              <p className="text-xl">0.2$</p> (1 life)
+            </Button>
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              className="p-4 text-sm w-1/3"
+              onClick={handleChargeClick}
+            >
+              <p className="text-xl">0.5$</p> (3 lives)
+            </Button>
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              className="p-4 text-sm w-1/3"
+              onClick={handleChargeClick}
+            >
+              <p className="text-xl">1$</p> (6 lives)
+            </Button>
+          </div>
+          <Button
+            bg="transparent"
+            shadow="#429e34"
+            className="space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
+            onClick={onClose}
+          >
+            <p>Exit to MainMenu</p> <BsArrowRight />
+          </Button>
+        </Card>
+      </div>
+
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={handleWalletClose}
+        capsuleClient={capsuleClient}
+      />
+    </>
   );
 }
 
 
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
-  const { isActive, balanceUsd } = useCapsuleStore();
+  const { isActive, balanceUsd, signer } = useCapsuleStore();
+  const { capsuleClient, initialize, connection } = useCapsule();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleJoin = () => {
-    console.log("Balance: ", balanceUsd);
+  const joinContest = async () => {
+    // If already initialized or no signer, return early
+    if (hasInitialized.current || !signer?.address) return;
 
-    // string to float
-    const balance = parseFloat(balanceUsd || "0");
-    if (balance < 0.2) {
-      // open dead modal
-      setIsRechargeModalOpen(true);
+    try {
+      const pubkey = new PublicKey(signer.address);
+      const playerStateAccount = getPlayerStateAccount(pubkey, 0);
+
+      const playerStateData = await getPlayerStateAsJSON(connection, playerStateAccount);
+      console.log("Player state: ", playerStateData);
+
+      // No player state found, join contest
+      const response = await fetch('/api/join-contest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          playerPublicKey: pubkey.toBase58(),
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to get join transaction');
+      }
+
+      const { transaction: base64Transaction } = await response.json();
+
+      // Deserialize and send transaction
+      const transaction = Transaction.from(
+        Buffer.from(base64Transaction, 'base64')
+      );
+
+      const signature = await signer.sendTransaction(transaction, {
+        skipPreflight: false,
+        preflightCommitment: "confirmed",
+      });
+
+      console.log("Successfully joined contest!");
+      console.log("Transaction signature:", signature);
+      console.log(
+        `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
+      );
+
+      // Wait for transaction confirmation and fetch updated player state
+      await connection.confirmTransaction(signature);
+      const updatedPlayerState = await getPlayerStateAsJSON(connection, playerStateAccount);
+
+      console.log("Updated player state: ", updatedPlayerState);
+
+      // Mark as initialized after successful completion
+      hasInitialized.current = true;
+
+    } catch (error) {
+      console.error("Error initializing player:", error);
+      // Reset initialization flag on error so it can be retried
+      hasInitialized.current = false;
     }
 
+    return hasInitialized.current;
+  };
 
-    return
-    scene.scene.start("Game");
+  // At the top of your component:
+  const hasInitialized = useRef(false);
+
+  const handleJoin = async () => {
+    console.log("Balance: ", balanceUsd);
+
+    const balance = parseFloat(balanceUsd || "0");
+    if (balance < 0.2) {
+      setIsRechargeModalOpen(true);
+      return;
+    }
+
+    if (!isActive || !capsuleClient) {
+      console.error("Wallet not connected");
+      return;
+    }
+
+    // const joined = await joinContest();
+    const joined = await joinContest();
+
+    if (joined) {
+      scene.scene.start("Game");
+    } else {
+      console.error("Failed to join contest");
+    }
   };
 
   return (
@@ -191,13 +295,14 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
             <button
               className="bg-none pointer-events-auto"
               onClick={handleJoin}
+              disabled={loading}
             >
               <Image
                 src={"/assets/start.png"}
                 alt="start"
                 width={180}
                 height={60}
-              ></Image>
+              />
             </button>
           ) : (
             <WalletState mainMenu={true} />
@@ -207,14 +312,16 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
             alt="player"
             width={109}
             height={89}
-          ></Image>
+          />
         </div>
-
         <Season />
       </div>
 
       {isRechargeModalOpen && (
-        <ChargeModal onClose={() => setIsRechargeModalOpen(false)} />
+        <ChargeModal
+          onClose={() => setIsRechargeModalOpen(false)}
+          capsuleClient={capsuleClient}
+        />
       )}
     </div>
   );

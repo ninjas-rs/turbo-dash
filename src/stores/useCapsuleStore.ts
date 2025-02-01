@@ -1,7 +1,7 @@
 import { CapsuleSolanaWeb3Signer } from '@usecapsule/solana-web3.js-v1-integration';
 import { create } from 'zustand';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { getEthPrice } from '@/app/actions';
+import { getEthPrice, getSolPrice } from '@/app/actions';
 
 interface CapsuleStore {
   isActive: boolean;
@@ -33,7 +33,8 @@ export const useCapsuleStore = create<CapsuleStore>((set, get) => ({
       const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(4);
       
       const ethPrice = await getEthPrice();
-      const balanceUsd = ethPrice 
+      // const solPrice = await getSolPrice();
+      const balanceUsd = ethPrice
         ? (Number(solBalance) * ethPrice).toFixed(2)
         : null;
 

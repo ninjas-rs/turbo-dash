@@ -16,6 +16,40 @@ type WalletStateProps = {
   mainMenu?: boolean;
 };
 
+export function WalletModal({
+  isOpen,
+  onClose,
+  capsuleClient,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  capsuleClient: any;
+}) {
+  return (
+    <CapsuleModal
+      capsule={capsuleClient}
+      isOpen={isOpen}
+      onClose={onClose}
+      logo={"/assets/player.png"}
+      theme={{
+        mode: "dark",
+        backgroundColor: "#2c2c2c",
+        foregroundColor: "#ffffff",
+        accentColor: "#000000",
+      }}
+      oAuthMethods={[OAuthMethod.GOOGLE, OAuthMethod.TWITTER]}
+      disableEmailLogin={true}
+      disablePhoneLogin={true}
+      authLayout={["AUTH:FULL"]}
+      externalWallets={[]}
+      twoFactorAuthEnabled={false}
+      recoverySecretStepEnabled={true}
+      onRampTestMode
+      className="pointer-events-auto"
+    />
+  );
+};
+
 export default function WalletState({
   className,
   text,
@@ -32,33 +66,10 @@ export default function WalletState({
 
   const handleModalClose = () => {
     setIsModalOpen(false);
-    initialize();
-  };
-
-  const Modal = () => {
-    return (
-      <CapsuleModal
-        capsule={capsuleClient}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        logo={"/assets/player.png"}
-        theme={{
-          mode: "dark",
-          backgroundColor: "#2c2c2c",
-          foregroundColor: "#ffffff",
-          accentColor: "#000000",
-        }}
-        oAuthMethods={[OAuthMethod.GOOGLE, OAuthMethod.TWITTER]}
-        disableEmailLogin={true}
-        disablePhoneLogin={true}
-        authLayout={["AUTH:FULL"]}
-        externalWallets={[]}
-        twoFactorAuthEnabled={false}
-        recoverySecretStepEnabled={true}
-        onRampTestMode
-        className="pointer-events-auto"
-      />
-    );
+    // give it 0.2 seconds to initialize
+    setTimeout(() => {
+      initialize();
+    }, 200);
   };
 
   if (mainMenu && !isActive) {
@@ -75,7 +86,7 @@ export default function WalletState({
             height={60}
           ></Image>
         </button>
-        {capsuleClient && <Modal />}
+        {capsuleClient && <WalletModal isOpen={isModalOpen} onClose={handleModalClose} capsuleClient={capsuleClient} />}
       </>
     );
   }
@@ -89,7 +100,9 @@ export default function WalletState({
           shadowColor="#7e851b"
           className="rounded-sm text-white mr-2"
         >
+          {/* Pretty sure there is a confusion somewhere here */}
           {balance ? balance : "..."} ETH (${balanceUsd})
+          {/* { balance ? balance : "..." } SOL (${ balanceUsd }) */}
         </Card>
       )}
       <Button
@@ -109,7 +122,7 @@ export default function WalletState({
         )}
       </Button>
 
-      {capsuleClient && <Modal />}
+      {capsuleClient && <WalletModal isOpen={isModalOpen} onClose={handleModalClose} capsuleClient={capsuleClient} />}
     </>
   );
 }

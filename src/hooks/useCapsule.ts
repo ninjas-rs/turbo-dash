@@ -19,7 +19,13 @@ export const useCapsule = () => {
       const isActive = capsuleClient.isEmail;
       setActive(isActive);
       if (isActive) {
-        const signer = new CapsuleSolanaWeb3Signer(capsuleClient, connection);
+        // get the signer wallet
+        const wallets = await capsuleClient.getWallets();
+
+        // get the first key value
+        const wallet = Object.values(wallets)[0]
+
+        const signer = new CapsuleSolanaWeb3Signer(capsuleClient, connection, wallet.id);
         if (signer) setSigner(signer);
       }
       console.log("Signer initialized successfully", isActive);
@@ -54,5 +60,6 @@ export const useCapsule = () => {
   return {
     capsuleClient,
     initialize: initializeSigner,
+    connection: connection,
   };
 };
