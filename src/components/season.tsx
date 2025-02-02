@@ -3,6 +3,8 @@ import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { BN } from '@coral-xyz/anchor';
 import PixelatedCard from './pixelated-card';
 import { getRoundCounterAccount, getGlobalAccount } from '@/utils/pdas';
+import { useCapsuleStore } from '@/stores/useCapsuleStore';
+import { fetchPlayerState, PlayerState } from '@/utils/transactions';
 
 interface ContestDetails {
   startTime: number;
@@ -10,7 +12,7 @@ interface ContestDetails {
   prizePool: number;
   highestScore: number;
   totalParticipants: number;
-  playerRank?: number;
+  userScore?: number;
 }
 
 interface TimeLeft {
@@ -48,6 +50,8 @@ function Season() {
   const [contestDetails, setContestDetails] = useState<ContestDetails | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
+  const { signer } = useCapsuleStore();
+  const [playerState, setPlayerState] = useState<PlayerState | null>(null);
 
   useEffect(() => {
     const fetchContestDetails = async () => {
@@ -57,7 +61,7 @@ function Season() {
 
         const counterPDA = getRoundCounterAccount();
         const counterAccount = await connection.getAccountInfo(counterPDA);
-        
+
         if (!counterAccount) {
           console.log("No counter account found");
           setLoading(false);
@@ -65,7 +69,7 @@ function Season() {
         }
 
         const count = new BN(counterAccount.data.slice(8), 'le').toNumber();
-        
+
         if (count === 0) {
           console.log("No contests created yet");
           setLoading(false);
@@ -74,7 +78,7 @@ function Season() {
 
         const globalPDA = getGlobalAccount();
         const globalAccount = await connection.getAccountInfo(globalPDA);
-        
+
         if (!globalAccount) {
           console.log("No global account found");
           setLoading(false);
@@ -93,7 +97,7 @@ function Season() {
         );
 
         const contestAccount = await connection.getAccountInfo(contestPDA);
-        
+
         if (!contestAccount) {
           console.log("No contest account found");
           setLoading(false);
@@ -101,13 +105,32 @@ function Season() {
         }
 
         const data = contestAccount.data;
-        const details: ContestDetails = {
+        let details: ContestDetails = {
           startTime: new BN(data.slice(48, 56), 'le').toNumber(),
           endTime: new BN(data.slice(56, 64), 'le').toNumber(),
           prizePool: new BN(data.slice(64, 72), 'le').toNumber() / LAMPORTS_PER_SOL,
           highestScore: new BN(data.slice(72, 80), 'le').toNumber(),
           totalParticipants: new BN(data.slice(144, 152), 'le').toNumber()
         };
+
+        // convert sol to usd
+        
+
+        if (signer?.address) {
+          console.log("Fetching player state for:", signer.address);
+          const pubKey = new PublicKey(signer?.address);
+
+          const playerState = await fetchPlayerState(
+            connection,
+            programId,
+            pubKey,
+            latestContestId
+          );
+
+          setPlayerState(playerState);
+          console.log("Player state:", playerState);
+          details.userScore = playerState?.currentScore;
+        }
 
         setContestDetails(details);
         setTimeLeft(calculateTimeLeft(details.endTime));
@@ -119,7 +142,7 @@ function Season() {
     };
 
     fetchContestDetails();
-    
+
     // Update countdown every second
     const timer = setInterval(() => {
       if (contestDetails?.endTime) {
@@ -179,24 +202,24 @@ function Season() {
           </div>
         )}
         <br />
-        <p>current rank</p>
+        <p>current score</p>
         <h2 className="text-3xl text-bold">
-          {contestDetails.playerRank ? 
-            `${contestDetails.playerRank}${getOrdinalSuffix(contestDetails.playerRank)}` : 
-            'Not ranked'}
+          {contestDetails.userScore !== undefined ?
+            `${contestDetails.userScore}` :
+            'Not participated'}
         </h2>
         <br />
         <p>total rewards in pot</p>
-        <h2 className="text-3xl text-bold">{contestDetails.prizePool.toFixed(2)}$</h2>
+        <h2 className="text-3xl text-bold">{contestDetails.prizePool.toFixed(5)}$</h2>
       </div>
     </PixelatedCard>
   );
 }
 
-function getOrdinalSuffix(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return s[(v - 20) % 10] || s[v] || s[0];
-}
+// function getOrdinalSuffix(n: number): string {
+//   const s = ['th', 'st', 'nd', 'rd'];
+//   const v = n % 100;
+//   return s[(v - 20) % 10] || s[v] || s[0];
+// }
 
 export default Season;

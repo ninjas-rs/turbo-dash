@@ -9,7 +9,7 @@ import { useCapsule } from "@/hooks/useCapsule";
 
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { getPlayerStateAccount } from "@/utils/pdas";
-import { getPlayerStateAsJSON } from "@/utils/transactions";
+import { fetchLatestContestId, fetchPlayerState, getPlayerStateAsJSON } from "@/utils/transactions";
 
 import Season from "./season";
 
@@ -166,7 +166,7 @@ export function ChargeModal({ onClose, capsuleClient }) {
           </p>
           <p className="text-center text-xl pb-3">Get lives</p>
           <div className="flex flex-row w-full pb-8">
-            <Button
+            {/* <Button
               bg="transparent"
               shadow="#429e34"
               className="p-4 text-sm w-1/3"
@@ -189,6 +189,14 @@ export function ChargeModal({ onClose, capsuleClient }) {
               onClick={handleChargeClick}
             >
               <p className="text-xl">1$</p> (6 lives)
+            </Button> */}
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              className="p-4 text-sm w-1/3"
+              onClick={handleChargeClick}
+            >
+              <p className="text-xl">Deposit funds</p>
             </Button>
           </div>
           <Button
@@ -211,7 +219,6 @@ export function ChargeModal({ onClose, capsuleClient }) {
   );
 }
 
-
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const { isActive, balanceUsd, balance, signer } = useCapsuleStore();
   const { capsuleClient, initialize, connection } = useCapsule();
@@ -233,7 +240,22 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
     try {
       const pubkey = new PublicKey(signer.address);
-      const playerStateAccount = getPlayerStateAccount(pubkey, 0);
+      const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
+
+      const latestContest = await fetchLatestContestId(connection, programId);
+      const latestContestId = latestContest?.latestContestId || null;
+
+      if (!latestContestId) {
+        console.log("No active contests found");
+        return false;
+      }
+
+      const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
+
+      if (playerState) {
+        console.log("Player has already joined the contest");
+        return true;
+      }
 
       // No player state found, join contest
       const response = await fetch('/api/join-contest', {
@@ -271,15 +293,13 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
       // Wait for transaction confirmation and fetch updated player state
       await connection.confirmTransaction(signature);
-      const updatedPlayerState = await getPlayerStateAsJSON(connection, playerStateAccount);
-
-      console.log("Updated player state: ", updatedPlayerState);
+    
 
       // Mark as initialized after successful completion
       hasInitialized.current = true;
 
     } catch (error) {
-      console.error("Error initializing player:", error);
+      console.log("Error initializing player:", error);
       // Reset initialization flag on error so it can be retried
       hasInitialized.current = false;
     }
@@ -302,32 +322,80 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       }
 
       if (!isActive || !capsuleClient || !signer?.address) {
-        console.error("Wallet not connected");
+        console.log("Wallet not connected");
         return;
       }
 
       const pubkey = new PublicKey(signer.address);
-      const playerStateAccount = getPlayerStateAccount(pubkey, 0);
 
-      try {
-        // Check if player has already joined
-        const existingPlayerState = await getPlayerStateAsJSON(connection, playerStateAccount);
-        console.log("Found existing player state:", existingPlayerState);
-        // If we get here, player has already joined
-        scene.scene.start("Game");
+      const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
+
+      const latestContest = await fetchLatestContestId(connection, pubkey);
+
+      console.log("Latest contest:", latestContest);
+
+      const latestContestId = latestContest?.latestContestId || null;
+
+      if (!latestContestId) {
+        console.log("No active contests found");
+        setLoading(false);
         return;
-      } catch (error) {
-        // If player state doesn't exist, join the contest
-        console.log("Player hasn't joined yet, joining contest...");
-        const joined = await joinContest();
-        if (joined) {
-          scene.scene.start("Game");
-        } else {
-          console.error("Failed to join contest");
-        }
       }
+
+      const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
+
+      // try {
+      //   // If we get here, player has already joined
+      //   scene.scene.start("Game");
+      // } catch (error) {
+      //   // If player state doesn't exist, join the contest
+      //   console.log("Player hasn't joined yet, joining contest...");
+      //   const joined = await joinContest();
+      //   if (joined) {
+      //     scene.scene.start("Game");
+      //   } else {
+      //     console.log("Failed to join contest");
+      //   }
+      // }
+
+      if (!playerState) {
+        // player has not joined any contests yet
+        console.log("Player hasn't joined yet, joining contest...");
+        try {
+          const joined = await joinContest();
+          if (joined) {
+            scene.scene.start("Game");
+          } else {
+            console.log("Failed to join contest");
+          }
+        } catch (error) {
+          console.log("Error joining contest:", error);
+        }
+      } else if (playerState.contestId !== latestContestId) {
+        // player has joined a different contest
+        console.log("Player has joined a different contest");
+        console.log("Latest contest ID:", latestContestId);
+        console.log("Player contest ID:", playerState.contestId);
+        console.log("Joining new contest...");
+        
+        try {
+          const joined = await joinContest();
+          if (joined) {
+            scene.scene.start("Game");
+          } else {
+            console.log("Failed to join contest");
+          }
+        } catch (error) {
+          console.log("Error joining contest:", error);
+        } 
+      } else if (playerState.contestId === latestContestId) {
+        // player has already joined the latest contest
+        console.log("Player has already joined the contest");
+        scene.scene.start("Game");
+      }
+
     } catch (error) {
-      console.error("Error in handleJoin:", error);
+      console.log("Error in handleJoin:", error);
     } finally {
       setLoading(false);
     }
@@ -354,17 +422,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         <Leaderboard />
         <div className="flex flex-col items-center justify-center space-y-8">
           {isActive ? (
-            // <button
-            //   className="bg-none pointer-events-auto"
-            //   onClick={handleJoin}
-            //   disabled={loading}
-            // >
-            //   <Image
-            //     src={"/assets/start.png"}
-            //     alt="start"
-            //     width={180}
-            //     height={60} />
-            // </button>
             <LoadingButton onClick={handleJoin} loading={loading} />
           ) : (
             <WalletState mainMenu={true} capsuleClient={capsuleClient} initialize={initialize} />

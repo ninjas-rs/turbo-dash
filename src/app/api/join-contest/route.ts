@@ -3,10 +3,6 @@ import {
     Connection,
     PublicKey,
     Transaction,
-    LAMPORTS_PER_SOL,
-    SYSVAR_INSTRUCTIONS_PUBKEY,
-    SystemProgram,
-    Ed25519Program,
 } from "@solana/web3.js";
 
 import fs from "fs";
@@ -81,7 +77,15 @@ export const POST = async (req: NextRequest) => {
             return res.json({ error: 'No active contests found' }, { status: 404 });
         }
 
-        const latestContest = allContests[allContests.length - 1];
+        // const latestContest = allContests[allContests.length - 1];
+        let latestContest = allContests[0];
+
+        // console.log("Fetched all contests:", allContests);
+        for (const contest of allContests) {
+            if (contest.account.id.toNumber() > latestContest.account.id.toNumber()) {
+                latestContest = contest;
+            }
+        }
 
         // Get PDAs
         const playerStatePubkey = getPlayerStateAccount(

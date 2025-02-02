@@ -36,8 +36,10 @@ const loadKeyPairFromFile = (
 export const POST = async (req: NextRequest) => {
   const body = await req.json();
   const userPubKey = body.userPubKey;
-  // const roundId = body.roundId;
-  // const contestPubKey = body.contestPubKey;
+  const roundId = body.roundId;
+  const contestPubKey = body.contestPubKey;
+
+  console.log("contestPubKey: ", contestPubKey);
 
   const connection = new Connection(env.NEXT_PUBLIC_RPC_ENDPOINT);
 
@@ -74,11 +76,14 @@ export const POST = async (req: NextRequest) => {
 
   // assuming that we only have one contest
   // at a time
-  const latestContest = allContests[allContests.length - 1];
-  let roundId = latestContest.account.id.toNumber();
-  let contestPubKey = latestContest.publicKey.toBase58();
-  
+  let latestContest = allContests[0];
 
+  for (const contest of allContests) {
+      if (contest.account.id.toNumber() > latestContest.account.id.toNumber()) {
+          latestContest = contest;
+      }
+  }
+  
   const playerStateKey = getPlayerStateAccount(
     new PublicKey(userPubKey),
     roundId as number,
