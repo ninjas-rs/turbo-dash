@@ -91,47 +91,51 @@ function Leaderboard() {
   }, []);
 
   return (
-    <PixelatedCard>
-      <Card
-        textColor="black"
-        shadowColor="#59b726"
-        borderColor="#26541B"
-        bg="#239B3F"
-        className="!border-0 w-[70%] mb-3 p-1 text-sm text-center"
-      >
-        <div className="grid grid-cols-3 w-full items-center px-2">
-          <h2 className="text-left">Rank</h2>
-          <h2>Address</h2>
-          <h2 className="text-right">Score</h2>
+    <PixelatedCard className="flex items-center justify-center min-h-0">
+      <div className="flex flex-col items-center w-[70%]">
+        <Card
+          textColor="black"
+          shadowColor="#59b726"
+          borderColor="#26541B"
+          bg="#239B3F"
+          className="!border-0 w-full mb-3 p-1 text-sm text-center"
+        >
+          <div className="grid grid-cols-3 w-full items-center px-2">
+            <h2 className="text-left">Rank</h2>
+            <h2>Address</h2>
+            <h2 className="text-right">Score</h2>
+          </div>
+        </Card>
+
+        <div className="flex flex-col space-y-2 w-full max-h-[60vh] overflow-y-auto">
+          {leaderboard.map((item, index) => {
+            return (
+              <Card
+                key={index}
+                bg="#239B3F"
+                textColor="black"
+                shadowColor="#59b726"
+                borderColor="#26541B"
+                className="w-[90%] mx-auto p-1 text-sm"
+              >
+                <div className="grid grid-cols-3 w-full items-center px-2">
+                  <span className="text-left font-bold">#{index + 1}</span>
+                  <span className="text-center font-mono">{formatAddress(item.address)}</span>
+                  <span className="text-right tabular-nums">{formatScore(item.score)}</span>
+                </div>
+              </Card>
+            );
+          })}
         </div>
-      </Card>
-      <div className="flex flex-col space-y-2 w-[70%] mx-auto">
-        {leaderboard.map((item, index) => {
-          return (
-            <Card
-              key={index}
-              bg="#239B3F"
-              textColor="black"
-              shadowColor="#59b726"
-              borderColor="#26541B"
-              className="mx-auto w-[90%] p-1 text-sm"
-            >
-              <div className="grid grid-cols-3 w-full items-center px-2">
-                <span className="text-left font-bold">#{index + 1}</span>
-                <span className="text-center font-mono">{formatAddress(item.address)}</span>
-                <span className="text-right tabular-nums">{formatScore(item.score)}</span>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-      <div className="relative bottom-0 right-0 flex flex-row space-x-2 mt-4">
-        <Button bg="#59b726">
-          <BsArrowLeft />
-        </Button>
-        <Button bg="#59b726">
-          <BsArrowRight />
-        </Button>
+
+        <div className="flex flex-row space-x-2 mt-4">
+          <Button bg="#59b726">
+            <BsArrowLeft />
+          </Button>
+          <Button bg="#59b726">
+            <BsArrowRight />
+          </Button>
+        </div>
       </div>
     </PixelatedCard>
   );

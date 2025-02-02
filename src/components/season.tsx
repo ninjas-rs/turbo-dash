@@ -182,44 +182,52 @@ function Season() {
   }
 
   return (
-    <PixelatedCard>
-      <div className="flex flex-col items-center justify-center">
-        <h1 className="py-4">EARLY WINTER ARC</h1>
-        <p>season ends in</p>
-        {timeLeft.isExpired ? (
-          <h2 className="text-3xl font-bold text-red-500">SEASON ENDED</h2>
-        ) : (
-          <div className="grid grid-cols-4 gap-4 text-center my-2">
-            <div>
-              <div className="text-3xl font-bold">{timeLeft.days}</div>
-              <div className="text-sm">days</div>
+      <PixelatedCard>
+        <div className="flex flex-col items-center justify-center max-h-[90vh] overflow-y-auto p-4">
+          <h1 className="py-2 text-center">EARLY WINTER ARC</h1>
+          <p className="text-center">season ends in</p>
+          {timeLeft.isExpired ? (
+            <h2 className="text-3xl font-bold text-red-500">SEASON ENDED</h2>
+          ) : (
+            <div className="grid grid-cols-4 gap-2 text-center my-2 w-full max-w-xs">
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.days}</div>
+                <div className="text-xs sm:text-sm">days</div>
+              </div>
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.hours.toString().padStart(2, '0')}</div>
+                <div className="text-xs sm:text-sm">hrs</div>
+              </div>
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+                <div className="text-xs sm:text-sm">min</div>
+              </div>
+              <div>
+                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+                <div className="text-xs sm:text-sm">sec</div>
+              </div>
             </div>
-            <div>
-              <div className="text-3xl font-bold">{timeLeft.hours.toString().padStart(2, '0')}</div>
-              <div className="text-sm">hrs</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">{timeLeft.minutes.toString().padStart(2, '0')}</div>
-              <div className="text-sm">min</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold">{timeLeft.seconds.toString().padStart(2, '0')}</div>
-              <div className="text-sm">sec</div>
-            </div>
+          )}
+          
+          <div className="mt-4 text-center">
+            <p>current score</p>
+            <h2 className="text-2xl sm:text-3xl text-bold">
+              {contestDetails.userScore !== undefined ?
+                `${contestDetails.userScore}` :
+                'Not participated'}
+            </h2>
           </div>
-        )}
-        <br />
-        <p>current score</p>
-        <h2 className="text-3xl text-bold">
-          {contestDetails.userScore !== undefined ?
-            `${contestDetails.userScore}` :
-            'Not participated'}
-        </h2>
-        <br />
-        <p>total rewards in pot</p>
-        <h2 className="text-3xl text-bold">{ contestDetails?.prizePoolUsd ? `$${contestDetails.prizePoolUsd.toFixed(5)}` : `${contestDetails.prizePool.toFixed(5)} SOL` }</h2>
-      </div>
-    </PixelatedCard>
+  
+          <div className="mt-4 text-center">
+            <p>total rewards in pot</p>
+            <h2 className="text-2xl sm:text-3xl text-bold">
+              {contestDetails?.prizePoolUsd ? 
+                `$${contestDetails.prizePoolUsd.toFixed(5)}` : 
+                `${contestDetails.prizePool.toFixed(5)} SOL`}
+            </h2>
+          </div>
+        </div>
+      </PixelatedCard>
   );
 }
 

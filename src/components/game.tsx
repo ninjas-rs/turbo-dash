@@ -35,27 +35,23 @@ function DeathModal({
   setDeathModalVisible: (visible: boolean) => void;
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
-  // Add loading state
   const [isProcessing, setIsProcessing] = useState(false);
-  // Add txn lock for additional safety
   const [txnLock, setTxnLock] = useState(false);
+  const [processingAmount, setProcessingAmount] = useState<number | null>(null);
 
   const { capsuleClient, initialize, connection } = useCapsule();
   const { balanceUsd, signer } = useCapsuleStore();
 
-  // Initialize capsuleClient
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  // make sure capsuleClient is valid
   if (!capsuleClient) {
     return null;
   }
 
   const handleChargeClick = async (charge: number) => {
     try {
-      // Prevent multiple clicks while processing
       if (isProcessing || txnLock) {
         console.log("Transaction already in progress");
         return;
@@ -73,15 +69,17 @@ function DeathModal({
       };
       setIsProcessing(true);
       setTxnLock(true);
-      
+      setProcessingAmount(charge);
+
       let balanceUsdFloat = parseFloat(balanceUsd || "0");
       if (balanceUsdFloat < charge) {
         setIsWalletOpen(true);
         setIsProcessing(false);
         setTxnLock(false);
+        setProcessingAmount(null);
         return;
       }
-  
+
       await executeRefillLivesTxn(
         signer,
         connection,
@@ -89,8 +87,7 @@ function DeathModal({
         charge,
         true
       );
-  
-      // Update lives and resume game
+
       setLives(makeLives(chargeMap[charge]));
       setDeathModalVisible(false);
       scene.events.emit("restart");
@@ -98,105 +95,106 @@ function DeathModal({
       console.error("Error refilling lives:", error);
     } finally {
       setIsProcessing(false);
+      setProcessingAmount(null);
       setTimeout(() => setTxnLock(false), 1000);
     }
   };
-
 
   const handleWalletClose = () => {
     setIsWalletOpen(false);
   };
 
+  const renderButtonContent = (charge: number, lives: number) => {
+    if (processingAmount === charge) {
+      return "loading..";
+    }
+    if (isProcessing) {
+      return "disabled";
+    }
+    return (
+      <>
+        <p className="text-xl">{charge}$</p> ({lives} {lives === 1 ? 'life' : 'lives'})
+      </>
+    );
+  };
+
   return (
-    <Card
-      bg="#239B3F"
-      borderColor="#26541B"
-      shadowColor="#59b726"
-      className="flex flex-col p-2 pointer-events-auto"
-    >
-      <h2 className="z-50 text-2xl text-[#671919] mb-4">
-        Game Over! (For now)
-      </h2>
-      <p className="pb-4">
-        You&apos;ve crossed paths with death herself, here on out you have two
-        choices, restart, or here go down the extra mile to get that high score
-        (trust me it&apos;s gonna be worth it in the end)
-      </p>
-      <p className="text-center text-xl pb-3">get more lives</p>
-      <div className="flex flex-row w-full pb-8">
-        <Button
-          bg="transparent"
-          shadow="#429e34"
-          className="p-4 text-sm w-1/3"
-          onClick={() => handleChargeClick(0.2)}
-          disabled={isProcessing || txnLock}
-        >
-          {isProcessing ? (
-            "loading.."
-          ) : (
-            <>
-              <p className="text-xl"> 0.2$</p> (1 life)
-            </>
-          )}
-        </Button>
-
-        <Button
-          bg="transparent"
-          shadow="#429e34"
-          className="p-4 text-sm w-1/3"
-          onClick={() => handleChargeClick(0.5)}
-          disabled={isProcessing || txnLock}
-        >
-          {isProcessing ? (
-            "loading.."
-          ) : (
-            <>
-              <p className="text-xl"> 0.5$</p> (3 lives)
-            </>
-          )}
-        </Button>
-
-        <Button
-          bg="transparent"
-          shadow="#429e34"
-          onClick={() => handleChargeClick(1)}
-          className="p-4 text-sm w-1/3"
-          disabled={isProcessing || txnLock}
-        >
-          {isProcessing ? (
-            "loading.."
-          ) : (
-            <>
-              <p className="text-xl"> 1$</p> (6 lives)
-            </>
-          )}
-        </Button>
-      </div>
-
-      <Button
-        bg="transparent"
-        shadow="#429e34"
-        className="text-sm"
-        onClick={() => restart()}
+    <div className="fixed inset-0 flex items-center justify-center p-4">
+      <Card
+        bg="#239B3F"
+        borderColor="#26541B"
+        shadowColor="#59b726"
+        className="flex flex-col p-2 pointer-events-auto w-full max-w-md max-h-[90vh] min-h-0"
       >
-        Start all over Again
-      </Button>
-      <Button
-        bg="transparent"
-        shadow="#429e34"
-        className=" space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
-        onClick={backToMainMenu}
-      >
-        <p>Exit to MainMenu</p> <BsArrowRight className="" />
-      </Button>
+        <div className="overflow-y-auto flex-1">
+          <h2 className="z-50 text-2xl text-[#671919] mb-4">
+            Game Over! (For now)
+          </h2>
+          <p className="pb-4">
+            You&apos;ve crossed paths with death herself, here on out you have two
+            choices, restart, or here go down the extra mile to get that high score
+            (trust me it&apos;s gonna be worth it in the end)
+          </p>
+          <p className="text-center text-xl pb-3">get more lives</p>
+          <div className="flex flex-row w-full pb-4 gap-2">
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              className="p-2 text-sm w-1/3 min-w-0"
+              onClick={() => handleChargeClick(0.2)}
+              disabled={isProcessing || txnLock}
+            >
+              {renderButtonContent(0.2, 1)}
+            </Button>
 
-      <WalletModal
-        isOpen={isWalletOpen}
-        onClose={handleWalletClose}
-        capsuleClient={capsuleClient}
-      />
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              className="p-2 text-sm w-1/3 min-w-0"
+              onClick={() => handleChargeClick(0.5)}
+              disabled={isProcessing || txnLock}
+            >
+              {renderButtonContent(0.5, 3)}
+            </Button>
 
-    </Card>
+            <Button
+              bg="transparent"
+              shadow="#429e34"
+              onClick={() => handleChargeClick(1)}
+              className="p-2 text-sm w-1/3 min-w-0"
+              disabled={isProcessing || txnLock}
+            >
+              {renderButtonContent(1, 6)}
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-auto flex flex-col items-center">
+          <Button
+            bg="transparent"
+            shadow="#429e34"
+            className="text-sm mb-2"
+            onClick={() => restart()}
+          >
+            Start all over Again
+          </Button>
+          <Button
+            bg="transparent"
+            shadow="#429e34"
+            className="space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
+            onClick={backToMainMenu}
+          >
+            <p>Exit to MainMenu</p> <BsArrowRight className="" />
+          </Button>
+        </div>
+
+        <WalletModal
+          isOpen={isWalletOpen}
+          onClose={handleWalletClose}
+          capsuleClient={capsuleClient}
+        />
+      </Card>
+    </div>
   );
 }
 
