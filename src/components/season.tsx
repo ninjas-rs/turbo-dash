@@ -5,6 +5,7 @@ import PixelatedCard from './pixelated-card';
 import { getRoundCounterAccount, getGlobalAccount } from '@/utils/pdas';
 import { useCapsuleStore } from '@/stores/useCapsuleStore';
 import { fetchPlayerState, PlayerState } from '@/utils/transactions';
+import { getEthPrice } from '@/app/actions';
 
 interface ContestDetails {
   startTime: number;
@@ -13,6 +14,7 @@ interface ContestDetails {
   highestScore: number;
   totalParticipants: number;
   userScore?: number;
+  prizePoolUsd?: number;
 }
 
 interface TimeLeft {
@@ -114,7 +116,12 @@ function Season() {
         };
 
         // convert sol to usd
-        
+        const ethPrice = await getEthPrice();
+        if (ethPrice) {
+          details.prizePoolUsd = details.prizePool * ethPrice;
+        } else {
+          console.error("Error fetching ETH price");
+        }
 
         if (signer?.address) {
           console.log("Fetching player state for:", signer.address);
@@ -210,7 +217,7 @@ function Season() {
         </h2>
         <br />
         <p>total rewards in pot</p>
-        <h2 className="text-3xl text-bold">{contestDetails.prizePool.toFixed(5)}$</h2>
+        <h2 className="text-3xl text-bold">{ contestDetails?.prizePoolUsd ? `$${contestDetails.prizePoolUsd.toFixed(5)}` : `${contestDetails.prizePool.toFixed(5)} SOL` }</h2>
       </div>
     </PixelatedCard>
   );

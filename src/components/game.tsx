@@ -4,12 +4,13 @@ import WalletState, { WalletModal } from "./wallet-state";
 import { BsArrowRight } from "react-icons/bs";
 import { useCapsule } from "@/hooks/useCapsule";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
-import { fetchLatestContestId } from "@/utils/transactions";
+import { executeRefillLivesTxn, fetchLatestContestId } from "@/utils/transactions";
 
 import {
   PublicKey,
   Transaction,
 } from "@solana/web3.js";
+import { getEthPrice } from "@/app/actions";
 
 const DEFAULT_LIVES = 3;
 
@@ -23,11 +24,21 @@ type ClickHandler = () => void;
 function DeathModal({
   restart,
   backToMainMenu,
+  scene,
+  setLives,
+  setDeathModalVisible
 }: {
   restart: ClickHandler;
   backToMainMenu: ClickHandler;
+  scene: Phaser.Scene;
+  setLives: (lives: any[]) => void;
+  setDeathModalVisible: (visible: boolean) => void;
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
+  // Add loading state
+  const [isProcessing, setIsProcessing] = useState(false);
+  // Add txn lock for additional safety
+  const [txnLock, setTxnLock] = useState(false);
 
   const { capsuleClient, initialize, connection } = useCapsule();
   const { balanceUsd, signer } = useCapsuleStore();
@@ -44,81 +55,53 @@ function DeathModal({
 
   const handleChargeClick = async (charge: number) => {
     try {
-      const chargeMap: any = {
+      // Prevent multiple clicks while processing
+      if (isProcessing || txnLock) {
+        console.log("Transaction already in progress");
+        return;
+      }
+
+      if (!signer) {
+        console.error("No wallet connected");
+        return;
+      }
+
+      const chargeMap = {
         0.2: 1,
         0.5: 3,
         1: 6,
       };
-      const chargeAmount = chargeMap[charge];
-      let balanceUsdFloat = parseFloat(balanceUsd || "0");
-      if (balanceUsdFloat < chargeAmount) {
-        setIsWalletOpen(true);
-        return;
-      }
-  
-      if (!signer?.address) {
-        console.log("No signer available");
-        return;
-      }
-  
-      const pubkey = new PublicKey(signer.address);
-      const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
-      const latestContest = await fetchLatestContestId(connection, programId);
+      setIsProcessing(true);
+      setTxnLock(true);
       
-      if (!latestContest?.latestContestId) {
-        console.log("No active contests found");
+      let balanceUsdFloat = parseFloat(balanceUsd || "0");
+      if (balanceUsdFloat < charge) {
+        setIsWalletOpen(true);
+        setIsProcessing(false);
+        setTxnLock(false);
         return;
       }
   
-      // Call the refill API
-      const response = await fetch('/api/refill-lives', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userPubKey: pubkey.toBase58(),
-          roundId: latestContest.latestContestId,
-          contestPubKey: latestContest.contestPubKey.toBase58(),
-          shouldContinue: true // Keep the current score
-        }),
-      });
-  
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to get refill transaction');
-      }
-  
-      const { txn: base64Transaction } = await response.json();
-  
-      // Deserialize and send transaction
-      const transaction = Transaction.from(
-        Buffer.from(base64Transaction, 'base64')
+      await executeRefillLivesTxn(
+        signer,
+        connection,
+        new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!),
+        charge,
+        true
       );
   
-      const signature = await signer.sendTransaction(transaction, {
-        skipPreflight: false,
-        preflightCommitment: "confirmed",
-      });
-  
-      console.log("Successfully refilled lives!");
-      console.log("Transaction signature:", signature);
-      console.log(
-        `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
-      );
-  
-      // Wait for transaction confirmation
-      await connection.confirmTransaction(signature);
-  
-      // Update game state or UI after successful refill
-      // ... (handle UI updates, life count updates, etc.)
-  
+      // Update lives and resume game
+      setLives(makeLives(chargeMap[charge]));
+      setDeathModalVisible(false);
+      scene.events.emit("restart");
     } catch (error) {
       console.error("Error refilling lives:", error);
-      // Handle error (show error message to user, etc.)
+    } finally {
+      setIsProcessing(false);
+      setTimeout(() => setTxnLock(false), 1000);
     }
   };
-  
+
 
   const handleWalletClose = () => {
     setIsWalletOpen(false);
@@ -146,24 +129,47 @@ function DeathModal({
           shadow="#429e34"
           className="p-4 text-sm w-1/3"
           onClick={() => handleChargeClick(0.2)}
+          disabled={isProcessing || txnLock}
         >
-          <p className="text-xl"> 0.2$</p> (1 life)
+          {isProcessing ? (
+            "loading.."
+          ) : (
+            <>
+              <p className="text-xl"> 0.2$</p> (1 life)
+            </>
+          )}
         </Button>
+
         <Button
           bg="transparent"
           shadow="#429e34"
           className="p-4 text-sm w-1/3"
           onClick={() => handleChargeClick(0.5)}
+          disabled={isProcessing || txnLock}
         >
-          <p className="text-xl"> 0.5$</p> (3 lives)
+          {isProcessing ? (
+            "loading.."
+          ) : (
+            <>
+              <p className="text-xl"> 0.5$</p> (3 lives)
+            </>
+          )}
         </Button>
+
         <Button
           bg="transparent"
           shadow="#429e34"
           onClick={() => handleChargeClick(1)}
           className="p-4 text-sm w-1/3"
+          disabled={isProcessing || txnLock}
         >
-          <p className="text-xl"> 1$</p> (6 lives)
+          {isProcessing ? (
+            "loading.."
+          ) : (
+            <>
+              <p className="text-xl"> 1$</p> (6 lives)
+            </>
+          )}
         </Button>
       </div>
 
@@ -225,7 +231,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
         const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID);
 
         const latestContest = await fetchLatestContestId(connection, programId);
-        
+
         const latestContestId = latestContest?.latestContestId || null;
 
         if (!latestContestId) {
@@ -256,7 +262,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
 
         // Deserialize and send transaction
         const transaction = Transaction.from(Buffer.from(txn, 'base64'));
-        
+
         const signature = await signer.sendTransaction(transaction, {
           skipPreflight: false,
           preflightCommitment: "confirmed",
@@ -279,6 +285,14 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   const [deathModalVisible, setDeathModalVisible] = useState(false);
 
   const restartGame = () => {
+    executeRefillLivesTxn(
+      signer,
+      connection,
+      new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!),
+      0.0001,
+      false
+    )
+
     setDeathModalVisible(false);
     setLives(makeLives(DEFAULT_LIVES));
     setSp(0);
@@ -300,6 +314,8 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   };
 
   const handleObstacleHit = () => {
+    console.log("Obstacle hit! Lives remaining:", lives);
+    console.log("Lives exhausted:", lives.every((life) => life.exhausted));
     if (lives.every((life) => life.exhausted)) {
       handleDeath();
       return;
@@ -334,7 +350,14 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
         open={deathModalVisible}
         className="left-0 top-0 bottom-0 right-0 w-1/3 h-1/2 bg-transparent"
       >
-        <DeathModal restart={restartGame} backToMainMenu={backToMainMenu} />
+        {/* <DeathModal restart={restartGame} backToMainMenu={backToMainMenu} scene={scene} setLives={setLives} setDeathModalVisible={setDeathModalVisible} /> */}
+        <DeathModal
+          restart={restartGame}
+          backToMainMenu={backToMainMenu}
+          scene={scene}
+          setLives={setLives}
+          setDeathModalVisible={setDeathModalVisible}
+        />
       </dialog>
 
       <div className="h-full w-full flex flex-col p-8">

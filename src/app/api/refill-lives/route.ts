@@ -37,6 +37,7 @@ export const POST = async (req: NextRequest) => {
     const roundId = body.roundId;
     const contestPubKey = body.contestPubKey;
     const shouldContinue = body.shouldContinue ?? true; // Default to continuing with same score
+    const charge = body.charge || 0.2;
 
     const connection = new Connection(env.NEXT_PUBLIC_RPC_ENDPOINT);
     const keypair = loadKeyPairFromFile(process.cwd() + "/server_wallet.json");
@@ -64,8 +65,9 @@ export const POST = async (req: NextRequest) => {
     const MESSAGE = Uint8Array.from(Buffer.from(SIGNATURE_MESSAGE));
     const signature = await sign(MESSAGE, secretKey.slice(0, 32));
 
-    // Fee for refill (0.2 SOL as mentioned in your comments)
-    const FEE = new BN(0.2 * LAMPORTS_PER_SOL);
+    console.log("charge: ", charge);
+
+    const FEE = new BN(charge * LAMPORTS_PER_SOL);
 
     const playerStateKey = getPlayerStateAccount(
         new PublicKey(userPubKey),
