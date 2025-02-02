@@ -13,6 +13,8 @@ type WalletStateProps = {
   className?: string;
   text?: string;
   mainMenu?: boolean;
+  capsuleClient: any;
+  initialize: () => void;
 };
 
 export function WalletModal({
@@ -53,27 +55,29 @@ export default function WalletState({
   className,
   text,
   mainMenu,
+  capsuleClient,
+  initialize
+
 }: WalletStateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isActive, signer, balanceUsd, balance } = useCapsuleStore();
-  const { capsuleClient, initialize } = useCapsule();
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
 
   const truncatedAddress = useMemo(() => {
     if (!signer) return "";
     return `${signer.address!.slice(0, 4)}...${signer.address!.slice(-4)}`;
   }, [signer]);
 
+  useEffect(() => {
+    console.log("isActive: ", isActive);
+  }, [isActive]);
+
   const handleModalClose = () => {
     setIsModalOpen(false);
     // give it 0.2 seconds to initialize
-    // setTimeout(() => {
-    //   initialize();
-    // }, 200);
-    // initialize();
+    setTimeout(() => {
+      initialize();
+    }, 200);
+    initialize();
   };
 
   if (mainMenu && !isActive) {

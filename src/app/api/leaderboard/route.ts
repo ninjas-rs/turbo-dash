@@ -14,7 +14,7 @@ const redis = new Redis({
 const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT);
 
 const CACHE_KEY_PREFIX = "turbodash:leaderboard:contestId:";
-const CACHE_DURATION = 24 * 60 * 60;
+const CACHE_DURATION = 60;
 
 interface LeaderboardEntry {
     player: string;
@@ -49,8 +49,12 @@ async function fetchFromChain(contestId: number) : Promise<LeaderboardEntry[]> {
                 return [];
             }
 
+            console.log("Fetched all contests:", allContests);
+
             const latestContest = allContests[allContests.length - 1];
             contestId = latestContest.account.id.toNumber();
+
+            console.log("Latest contest ID:", contestId);
         }
 
         const playerAccounts = allAccounts.filter(account =>

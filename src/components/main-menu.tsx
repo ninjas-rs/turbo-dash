@@ -213,7 +213,7 @@ export function ChargeModal({ onClose, capsuleClient }) {
 
 
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
-  const { isActive, balanceUsd, signer } = useCapsuleStore();
+  const { isActive, balanceUsd, balance, signer } = useCapsuleStore();
   const { capsuleClient, initialize, connection } = useCapsule();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -226,16 +226,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       setLoading(false);
     }
   }, [isActive, balanceUsd]);
-
-  const getCurrentContest = async () => {
-    const response = await fetch('/api/current-contest');
-    if (!response.ok) {
-      throw new Error('Failed to get current contest');
-    }
-
-    const { contestId } = await response.json();
-    return contestId;
-  };
 
   const joinContest = async () => {
     // If already initialized or no signer, return early
@@ -356,7 +346,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           />
         </div>
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
-          <WalletState text="Sign in to Play" />
+          <WalletState text="Sign in to Play" capsuleClient={capsuleClient} initialize={initialize} />
         </div>
       </div>
 
@@ -373,12 +363,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
             //     src={"/assets/start.png"}
             //     alt="start"
             //     width={180}
-            //     height={60}
-            //   />
+            //     height={60} />
             // </button>
             <LoadingButton onClick={handleJoin} loading={loading} />
           ) : (
-            <WalletState mainMenu={true} />
+            <WalletState mainMenu={true} capsuleClient={capsuleClient} initialize={initialize} />
+            // <></>
           )}
           <Image
             src={"/assets/player.png"}
@@ -390,12 +380,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         <Season />
       </div>
 
-      {isRechargeModalOpen && (
-        <ChargeModal
-          onClose={() => setIsRechargeModalOpen(false)}
-          capsuleClient={capsuleClient}
-        />
-      )}
+      {/* {isRechargeModalOpen && (
+        // <ChargeModal
+        //   onClose={() => setIsRechargeModalOpen(false)}
+        //   // capsuleClient={capsuleClient}
+        // />
+      )} */}
     </div>
   );
 }

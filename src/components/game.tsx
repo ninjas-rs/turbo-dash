@@ -119,6 +119,14 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   const { signer, isActive } = useCapsuleStore();
   const [sp, setSp] = useState(0);
 
+  const { capsuleClient, initialize } = useCapsule();
+
+  // Initialize capsuleClient
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+
   useEffect(() => {
     if (sp === 0) return;
 
@@ -263,7 +271,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
             >
               {sp} SP
             </Card>
-            <WalletState />
+            <WalletState capsuleClient={capsuleClient} initialize={initialize} />
           </div>
         </div>
       </div>
