@@ -1,5 +1,6 @@
 export const TurbodashIdl: TurbodashIdl = {
-  address: "5h1temPzdsFNwSFNme9Hh2xFtYrjQBy38qZKeiryzPMa",
+  // address: "A16ypHQTbjj6A3MFeAk8CFpz9G4sPXyxD1jj3YxNw6gm",
+  address: "Bkw3hGBupsMdMjxZyS9BYeagK7oBe6wHSTMigYmeip6Z",
   metadata: {
     name: "turbodash",
     version: "0.1.0",
@@ -796,7 +797,7 @@ export const TurbodashIdl: TurbodashIdl = {
 } as const;
 
 export type TurbodashIdl = {
-  address: "5h1temPzdsFNwSFNme9Hh2xFtYrjQBy38qZKeiryzPMa";
+  address: "Bkw3hGBupsMdMjxZyS9BYeagK7oBe6wHSTMigYmeip6Z";
   metadata: {
     name: "turbodash";
     version: "0.1.0";

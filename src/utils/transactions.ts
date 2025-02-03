@@ -1,6 +1,9 @@
 import { BN } from "@coral-xyz/anchor";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, Connection } from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
+import { getContestAccount, getGlobalAccount, getRoundCounterAccount } from "./pdas";
+import { connection } from "next/server";
+import { getEthPrice } from "@/app/actions";
 
 /**
  * 
@@ -36,6 +39,13 @@ import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integrati
  * also leaderboard that will update every hour let's say, with global season winners.
  * 
  */
+
+
+export interface PlayerState {
+  owner: PublicKey;
+  contestId: number;
+  currentScore: number;
+}
 
 
 /**
@@ -79,25 +89,169 @@ export const sendTestSolanaTransaction = async (solanaSigner: CapsuleSolanaWeb3S
   }
 };
 
-export const getPlayerStateAsJSON = async (
+export const fetchPlayerState = async (
   connection: Connection,
-  playerStateAddress: PublicKey
+  programId: PublicKey,
+  playerPubkey: PublicKey,
+  contestId: number
+): Promise<PlayerState | null> => {
+  try {
+    const [playerPDA] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from("player"),
+        playerPubkey.toBuffer(),
+        new BN(contestId).toArrayLike(Buffer, "le", 8)
+      ],
+      programId
+    );
+
+    console.log("Checking player state for:", {
+      playerPubkey: playerPubkey.toString(),
+      contestId,
+      playerPDA: playerPDA.toString()
+    });
+
+    const playerAccount = await connection.getAccountInfo(playerPDA);
+
+    if (!playerAccount) {
+      console.log("No player state found for PDA:", playerPDA.toString());
+      return null;
+    }
+
+    console.log("Found player account with data:", playerAccount.data);
+
+    const playerData = playerAccount.data;
+    const data = {
+      owner: new PublicKey(playerData.slice(8, 40)),
+      contestId: new BN(playerData.slice(40, 48), 'le').toNumber(),
+      currentScore: new BN(playerData.slice(48, 56), 'le').toNumber()
+    };
+
+    console.log("Player state:", data);
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching player state:", error);
+    return null;
+  }
+};
+
+export const fetchLatestContestId = async (
+  connection: Connection,
+  programId: PublicKey
 ) => {
-  const accountInfo = await connection.getAccountInfo(playerStateAddress);
-  
-  if (!accountInfo) {
-    return null; // Account doesn't exist
+  try {
+    const counterPDA = getRoundCounterAccount();
+    const counterAccount = await connection.getAccountInfo(counterPDA);
+    
+    if (!counterAccount) {
+      console.log("No counter account found");
+      return null;
+    }
+    
+    const count = new BN(counterAccount.data.slice(8), 'le').toNumber();
+    if (count === 0) {
+      console.log("No contests created yet");
+      return null;
+    }
+
+
+    
+    const globalPDA = getGlobalAccount();
+    const globalAccount = await connection.getAccountInfo(globalPDA);
+    
+    if (!globalAccount) {
+      console.log("No global account found");
+      return null;
+    }
+    
+    const authority = new PublicKey(globalAccount.data.slice(8, 40));
+    const latestContestId = count - 1;
+
+    console.log("Latest contest id:", latestContestId);
+    
+    const contestPubKey = getContestAccount(authority, latestContestId);
+    const contestAccount = await connection.getAccountInfo(contestPubKey);
+    
+    if (!contestAccount) {
+      console.log("No contest account found");
+      return null;
+    }
+
+    return { latestContestId, contestPubKey };
+  } catch (error) {
+    console.log("Error fetching latest contest id:", error);
+    return null;
+  }
+};
+
+
+interface RefillLivesParams {
+  signer: { address: string; sendTransaction: Function };
+  connection: Connection;
+  programId: PublicKey;
+  charge: number;
+  shouldContinue: boolean;
+}
+
+export const executeRefillLivesTxn = async(
+  signer,
+  connection,
+  programId,
+  charge,
+  shouldContinue,
+): Promise<string> => {
+  if (!signer?.address) {
+    throw new Error("No signer available");
   }
 
-  // Skip the 8-byte discriminator
-  const data = accountInfo.data.slice(8);
+  const pubkey = new PublicKey(signer.address);
+  const latestContest = await fetchLatestContestId(connection, programId);
   
-  // Decode the data according to the PlayerState layout:
-  const playerState = {
-    owner: new PublicKey(data.slice(0, 32)).toString(),  // 32 bytes - Pubkey
-    contestId: new BN(data.slice(32, 40), 'le').toNumber(),  // 8 bytes - u64
-    currentScore: new BN(data.slice(40, 48), 'le').toNumber()  // 8 bytes - u64
-  };
+  if (!latestContest?.latestContestId) {
+    throw new Error("No active contests found");
+  }
 
-  return playerState;
-};
+  const ethPrice = await getEthPrice();
+  const chargeSol = charge / ethPrice;
+
+  // Call the refill API
+  const response = await fetch('/api/refill-lives', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userPubKey: pubkey.toBase58(),
+      roundId: latestContest.latestContestId,
+      contestPubKey: latestContest.contestPubKey.toBase58(),
+      shouldContinue,
+      charge: chargeSol,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to get refill transaction');
+  }
+
+  const { txn: base64Transaction } = await response.json();
+
+  // Deserialize and send transaction
+  const transaction = Transaction.from(Buffer.from(base64Transaction, 'base64'));
+  const signature = await signer.sendTransaction(transaction, {
+    skipPreflight: false,
+    preflightCommitment: "confirmed",
+  });
+
+  // Wait for transaction confirmation
+  await connection.confirmTransaction(signature);
+  
+  console.log("Successfully refilled lives!");
+  console.log("Transaction signature:", signature);
+  console.log(
+    `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
+  );
+
+  return signature;
+}

@@ -231,6 +231,7 @@ export class Game extends Scene {
 
     this.events.once("resume", () => {
       // we can have a backwards counter here maybe
+      // this.cleanup();
       this.scene.resume();
     });
 

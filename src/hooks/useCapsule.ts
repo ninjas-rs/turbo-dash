@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Connection } from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
@@ -6,6 +6,11 @@ import Capsule, { Environment } from "@usecapsule/react-sdk";
 
 export const useCapsule = () => {
   const { setActive, fetchBalance, setSigner, isActive } = useCapsuleStore();
+  const [wallets, setWallets] = useState<any>({});
+
+  useEffect(() => {
+    console.log("Getting re-rendered");
+  }, []);
 
   const capsuleClient = new Capsule(
     Environment.BETA,
@@ -17,12 +22,30 @@ export const useCapsule = () => {
   const initializeSigner = useCallback(async () => {
     try {
       const isActive = capsuleClient.isEmail;
+
+      if (!isActive) {
+        const wallets = await capsuleClient.getWallets();
+        setWallets(wallets);
+
+        console.log("No wallets found");
+        const isActive = false;
+        setActive(isActive);
+        return;
+      }
+      
       setActive(isActive);
       if (isActive) {
-        // get the signer wallet
         const wallets = await capsuleClient.getWallets();
+        setWallets(wallets);
 
         // get the first key value
+        if (!wallets) return;
+
+        if (Object.keys(wallets).length === 0) {
+          console.error("No wallets found");
+          return;
+        }
+
         const wallet = Object.values(wallets)[0]
 
         const signer = new CapsuleSolanaWeb3Signer(capsuleClient, connection, wallet.id);
