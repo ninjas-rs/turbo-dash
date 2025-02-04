@@ -5,6 +5,8 @@
 /.anchor
 *.log
 
+**/test-ledger
+
 # dependencies
 /node_modules
 /.pnp
