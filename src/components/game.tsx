@@ -230,7 +230,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
 
         const latestContest = await fetchLatestContestId(connection, programId);
 
-        const latestContestId = latestContest?.latestContestId || null;
+        const latestContestId = latestContest?.data.contestId || null;
 
         if (!latestContestId) {
           console.error("No active contests found");

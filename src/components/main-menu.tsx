@@ -9,7 +9,7 @@ import { useCapsule } from "@/hooks/useCapsule";
 
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { getPlayerStateAccount } from "@/utils/pdas";
-import { fetchLatestContestId, fetchPlayerState, getPlayerStateAsJSON } from "@/utils/transactions";
+import { fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
 
 import Season from "./season";
 
@@ -242,23 +242,39 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
     // If already initialized or no signer, return early
     if (hasInitialized.current || !signer?.address) return;
 
+    let solanaUrl = "";
+
     try {
       const pubkey = new PublicKey(signer.address);
       const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
       const latestContest = await fetchLatestContestId(connection, programId);
-      const latestContestId = latestContest?.latestContestId || null;
+      const latestContestId = latestContest?.data.contestId || null;
 
-      if (!latestContestId) {
+      if (!latestContestId || !latestContest?.data?.endTime) {
         console.log("No active contests found");
-        return false;
+        return {
+          "url": solanaUrl,
+          "joined": false,
+        }
       }
+
+      if (latestContest?.data?.endTime < Date.now() / 1000) {
+        console.log("Contest has ended");
+        return {
+          "url": solanaUrl,
+          "joined": false,
+        }
+      };
 
       const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
 
       if (playerState) {
         console.log("Player has already joined the contest");
-        return true;
+        return {
+          "url": solanaUrl,
+          "joined": true,
+        }
       }
 
       // No player state found, join contest
@@ -289,16 +305,16 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         preflightCommitment: "confirmed",
       });
 
+      solanaUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+
       console.log("Successfully joined contest!");
       console.log("Transaction signature:", signature);
       console.log(
-        `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
+        `View transaction: ${solanaUrl}`
       );
 
       // Wait for transaction confirmation and fetch updated player state
       await connection.confirmTransaction(signature);
-    
-
       // Mark as initialized after successful completion
       hasInitialized.current = true;
 
@@ -308,7 +324,11 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       hasInitialized.current = false;
     }
 
-    return hasInitialized.current;
+    // return hasInitialized.current;
+    return {
+      "url": solanaUrl,
+      "joined": hasInitialized.current,
+    }
   };
 
   // At the top of your component:
@@ -336,12 +356,18 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
       const latestContest = await fetchLatestContestId(connection, pubkey);
 
-      console.log("Latest contest:", latestContest);
+      console.log("Latest contest:", latestContest?.data);
 
-      const latestContestId = latestContest?.latestContestId || null;
+      const latestContestId = latestContest?.data.contestId || null;
 
       if (!latestContestId) {
         console.log("No active contests found");
+        setLoading(false);
+        return;
+      }
+
+      if (latestContest?.data?.endTime < Date.now() / 1000) {
+        console.log("Contest has ended");
         setLoading(false);
         return;
       }
@@ -366,7 +392,10 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         // player has not joined any contests yet
         console.log("Player hasn't joined yet, joining contest...");
         try {
-          const joined = await joinContest();
+          // const joined = await joinContest();
+          const status = await joinContest();
+          const joined = status?.joined;
+          const url = status?.url;
           if (joined) {
             scene.scene.start("Game");
           } else {
@@ -383,7 +412,10 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         console.log("Joining new contest...");
         
         try {
-          const joined = await joinContest();
+          // const joined = await joinContest();
+          const status = await joinContest();
+          const joined = status?.joined;
+          const url = status?.url;
           if (joined) {
             scene.scene.start("Game");
           } else {

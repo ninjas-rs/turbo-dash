@@ -57,6 +57,23 @@ export interface PlayerState {
  * 
  * use this on every obstacle passed 
  */
+
+const readI64FromBuffer = (buffer: Buffer, offset: number) => {
+  // Get the raw bytes for the i64
+  const bytes = buffer.slice(offset, offset + 8);
+  // Convert to signed using DataView
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const value = view.getBigInt64(0, true); // true for little-endian
+  return Number(value);
+};
+
+const safeNumber = (bn: BN) => {
+  if (bn.gt(new BN(Number.MAX_SAFE_INTEGER)) || bn.lt(new BN(Number.MIN_SAFE_INTEGER))) {
+    return bn.toString();
+  }
+  return bn.toNumber();
+};
+
 export const sendTestSolanaTransaction = async (solanaSigner: CapsuleSolanaWeb3Signer) => {
   try {
     const transaction = new Transaction();
@@ -178,7 +195,32 @@ export const fetchLatestContestId = async (
       return null;
     }
 
-    return { latestContestId, contestPubKey };
+    // fetch latest contest data
+    // const contestData = contestAccount.data;
+    // const data = {
+    //   contestId: new BN(contestData.slice(8, 16), 'le').toNumber(),
+    //   startTime: new BN(contestData.slice(16, 24), 'le').toNumber(),
+    //   endTime: new BN(contestData.slice(24, 32), 'le').toNumber(),
+    //   pot: new BN(contestData.slice(32, 40), 'le').toNumber(),
+    //   totalPlayers: new BN(contestData.slice(40, 48), 'le').toNumber(),
+    //   totalObstacles: new BN(contestData.slice(48, 56), 'le').toNumber(),
+    // };
+
+    // fetch latest contest data
+    const contestData = contestAccount.data;
+    const data = {
+      contestId: safeNumber(new BN(contestData.slice(8, 16), 'le')),       // id: u64
+      creator: new PublicKey(contestData.slice(16, 48)),                   // creator: Pubkey (32 bytes)
+      startTime: safeNumber(new BN(contestData.slice(48, 56), 'le')),      // start_time: i64 
+      endTime: safeNumber(new BN(contestData.slice(56, 64), 'le')),        // end_time: i64
+      prizePool: safeNumber(new BN(contestData.slice(64, 72), 'le')),      // prize_pool: u64
+      highestScore: safeNumber(new BN(contestData.slice(72, 80), 'le')),   // highest_score: u64
+      leader: new PublicKey(contestData.slice(80, 112)),                   // leader: Pubkey
+      teamAccount: new PublicKey(contestData.slice(112, 144)),             // team_account: Pubkey
+      totalParticipants: safeNumber(new BN(contestData.slice(144, 152), 'le')), // total_participants: u64
+    };
+
+    return { data, contestPubKey };
   } catch (error) {
     console.log("Error fetching latest contest id:", error);
     return null;
@@ -208,7 +250,7 @@ export const executeRefillLivesTxn = async(
   const pubkey = new PublicKey(signer.address);
   const latestContest = await fetchLatestContestId(connection, programId);
   
-  if (!latestContest?.latestContestId) {
+  if (!latestContest?.data.contestId) {
     throw new Error("No active contests found");
   }
 
@@ -223,7 +265,7 @@ export const executeRefillLivesTxn = async(
     },
     body: JSON.stringify({
       userPubKey: pubkey.toBase58(),
-      roundId: latestContest.latestContestId,
+      roundId: latestContest.data.contestId,
       contestPubKey: latestContest.contestPubKey.toBase58(),
       shouldContinue,
       charge: chargeSol,
