@@ -1,7 +1,7 @@
 import { CapsuleSolanaWeb3Signer } from '@usecapsule/solana-web3.js-v1-integration';
 import { create } from 'zustand';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { getEthPrice, getSolPrice } from '@/app/actions';
+import { getEthPrice } from '@/app/actions';
 
 interface CapsuleStore {
   isActive: boolean;

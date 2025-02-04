@@ -9,9 +9,10 @@ import { useCapsule } from "@/hooks/useCapsule";
 
 import { PublicKey, Transaction } from '@solana/web3.js';
 import { getPlayerStateAccount } from "@/utils/pdas";
-import { fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
+import { executeRefillLivesTxn, fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
 
 import Season from "./season";
+import TransactionToastQueue from "./toast";
 
 // const Mock = [
 //   {
@@ -227,7 +228,9 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const { isActive, balanceUsd, balance, signer } = useCapsuleStore();
   const { capsuleClient, initialize, connection } = useCapsule();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
+  const [activeToast, setActiveToast] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     // while the wallet is not connected, keep loading true
@@ -242,7 +245,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
     // If already initialized or no signer, return early
     if (hasInitialized.current || !signer?.address) return;
 
-    let solanaUrl = "";
+    let signature = "";
 
     try {
       const pubkey = new PublicKey(signer.address);
@@ -254,7 +257,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       if (!latestContestId || !latestContest?.data?.endTime) {
         console.log("No active contests found");
         return {
-          "url": solanaUrl,
+          "signature": signature,
           "joined": false,
         }
       }
@@ -262,17 +265,20 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       if (latestContest?.data?.endTime < Date.now() / 1000) {
         console.log("Contest has ended");
         return {
-          "url": solanaUrl,
+          "signature": signature,
           "joined": false,
         }
       };
 
       const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
 
+      // if player is joining again with the current contest id,
+      // just restart the game session.
       if (playerState) {
         console.log("Player has already joined the contest");
+        let signature = await executeRefillLivesTxn(signer, connection, programId, 0.2, false);
         return {
-          "url": solanaUrl,
+          "signature": signature,
           "joined": true,
         }
       }
@@ -300,12 +306,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         Buffer.from(base64Transaction, 'base64')
       );
 
-      const signature = await signer.sendTransaction(transaction, {
+      signature = await signer.sendTransaction(transaction, {
         skipPreflight: false,
         preflightCommitment: "confirmed",
       });
 
-      solanaUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+      let solanaUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
 
       console.log("Successfully joined contest!");
       console.log("Transaction signature:", signature);
@@ -326,7 +332,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
     // return hasInitialized.current;
     return {
-      "url": solanaUrl,
+      "signature": signature,
       "joined": hasInitialized.current,
     }
   };
@@ -395,7 +401,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           // const joined = await joinContest();
           const status = await joinContest();
           const joined = status?.joined;
-          const url = status?.url;
+          const signature = status?.signature;
 
           if (joined) {
             scene.scene.start("Game");
@@ -416,7 +422,9 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           // const joined = await joinContest();
           const status = await joinContest();
           const joined = status?.joined;
-          const url = status?.url;
+          const signature = status?.signature;
+          setActiveToast(signature);
+
           if (joined) {
             scene.scene.start("Game");
           } else {
@@ -427,6 +435,11 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         } 
       } else if (playerState.contestId === latestContestId) {
         // player has already joined the latest contest
+        const status = await joinContest();
+        const joined = status?.signature;
+
+        setActiveToast(status?.signature);
+
         console.log("Player has already joined the contest");
         scene.scene.start("Game");
       }
@@ -473,13 +486,13 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
         <Season />
       </div>
-
       {/* {isRechargeModalOpen && (
         // <ChargeModal
         //   onClose={() => setIsRechargeModalOpen(false)}
         //   // capsuleClient={capsuleClient}
         // />
       )} */}
+      {activeToast && <TransactionToastQueue activeSignature={activeToast} />}
     </div>
   );
 }
