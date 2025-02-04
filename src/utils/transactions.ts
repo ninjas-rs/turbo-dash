@@ -288,11 +288,13 @@ export const executeRefillLivesTxn = async(
 
   // Wait for transaction confirmation
   await connection.confirmTransaction(signature);
+
+  let solanaurl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
   
   console.log("Successfully refilled lives!");
   console.log("Transaction signature:", signature);
   console.log(
-    `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
+    solanaurl,
   );
 
   return signature;

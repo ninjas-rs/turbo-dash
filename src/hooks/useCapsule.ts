@@ -23,6 +23,7 @@ export const useCapsule = () => {
     try {
       const isActive = capsuleClient.isEmail;
       const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+      console.log("Is logged in", isLoggedIn);
       if (!isLoggedIn) {
         console.log("Not logged in");
         setActive(false);

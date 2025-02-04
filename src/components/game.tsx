@@ -11,6 +11,8 @@ import {
   Transaction,
 } from "@solana/web3.js";
 import { getEthPrice } from "@/app/actions";
+import TransactionToast from "./toast";
+import TransactionToastQueue from "./toast";
 
 const DEFAULT_LIVES = 3;
 
@@ -202,6 +204,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
   const [lives, setLives] = useState(makeLives(DEFAULT_LIVES));
   const { signer, isActive } = useCapsuleStore();
   const [sp, setSp] = useState(0);
+  const [activeToast, setActiveToast] = useState<string | null>(null);
 
   const { capsuleClient, initialize, connection } = useCapsule();
 
@@ -213,32 +216,24 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
 
   useEffect(() => {
     if (sp === 0) return;
-
     const recordProgress = async () => {
       try {
         if (!signer) {
           console.error("No wallet connected or no score to record");
           return;
         }
-
         if (!signer?.address) {
           console.error("No wallet connected");
           return;
         }
-
         const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID);
-
         const latestContest = await fetchLatestContestId(connection, programId);
-
         const latestContestId = latestContest?.data.contestId || null;
-
         if (!latestContestId) {
           console.error("No active contests found");
           return;
         }
-
         const contestPubKey = latestContest?.contestPubKey;
-
         // Call record-progress API
         const response = await fetch('/api/record-progress', {
           method: 'POST',
@@ -251,45 +246,42 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
             contestPubKey: contestPubKey,
           }),
         });
-
         if (!response.ok) {
           throw new Error('Failed to record progress');
         }
-
         const { txn } = await response.json();
-
         // Deserialize and send transaction
         const transaction = Transaction.from(Buffer.from(txn, 'base64'));
-
         const signature = await signer.sendTransaction(transaction, {
           skipPreflight: false,
           preflightCommitment: "confirmed",
         });
-
+        setActiveToast(signature);
         console.log("Successfully recorded progress!");
         console.log("Transaction signature:", signature);
         console.log(
           `View transaction: https://explorer.solana.com/tx/${signature}?cluster=devnet`
         );
-
+        
       } catch (error) {
         console.error("Error recording progress:", error);
       }
     };
-
     recordProgress();
   }, [sp]);
 
   const [deathModalVisible, setDeathModalVisible] = useState(false);
 
-  const restartGame = () => {
-    executeRefillLivesTxn(
+  const restartGame = async () => {
+    let signature = await executeRefillLivesTxn(
       signer,
       connection,
       new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!),
       0.0001,
       false
-    )
+    );
+
+    setActiveToast(signature);
 
     setDeathModalVisible(false);
     setLives(makeLives(DEFAULT_LIVES));
@@ -391,6 +383,8 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
           </div>
         </div>
       </div>
+
+      {<TransactionToastQueue activeSignature={activeToast} />}
     </>
   );
 }
