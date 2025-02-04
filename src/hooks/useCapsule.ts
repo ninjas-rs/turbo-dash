@@ -22,6 +22,12 @@ export const useCapsule = () => {
   const initializeSigner = useCallback(async () => {
     try {
       const isActive = capsuleClient.isEmail;
+      const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+      if (!isLoggedIn) {
+        console.log("Not logged in");
+        setActive(false);
+        return;
+      }
 
       if (!isActive) {
         const wallets = await capsuleClient.getWallets();
