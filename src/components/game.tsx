@@ -28,18 +28,21 @@ function DeathModal({
   backToMainMenu,
   scene,
   setLives,
-  setDeathModalVisible
+  setDeathModalVisible,
+  setActiveToast
 }: {
   restart: ClickHandler;
   backToMainMenu: ClickHandler;
   scene: Phaser.Scene;
   setLives: (lives: any[]) => void;
   setDeathModalVisible: (visible: boolean) => void;
+  setActiveToast: (signature: string) => void;
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [txnLock, setTxnLock] = useState(false);
   const [processingAmount, setProcessingAmount] = useState<number | null>(null);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   const { capsuleClient, initialize, connection } = useCapsule();
   const { balanceUsd, signer } = useCapsuleStore();
@@ -54,7 +57,7 @@ function DeathModal({
 
   const handleChargeClick = async (charge: number) => {
     try {
-      if (isProcessing || txnLock) {
+      if (isProcessing || txnLock || isRestarting) {
         console.log("Transaction already in progress");
         return;
       }
@@ -82,7 +85,7 @@ function DeathModal({
         return;
       }
 
-      await executeRefillLivesTxn(
+      let signature = await executeRefillLivesTxn(
         signer,
         connection,
         new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!),
@@ -90,6 +93,7 @@ function DeathModal({
         true
       );
 
+      setActiveToast(signature);
       setLives(makeLives(chargeMap[charge]));
       setDeathModalVisible(false);
       scene.events.emit("restart");
@@ -102,16 +106,37 @@ function DeathModal({
     }
   };
 
+  const handleRestart = async () => {
+    try {
+      setIsRestarting(true);
+      const signature = await executeRefillLivesTxn(
+        signer,
+        connection,
+        new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!),
+        0.0001,
+        false
+      );
+      setActiveToast(signature);
+      setDeathModalVisible(false);
+      setLives(makeLives(DEFAULT_LIVES));
+      scene.events.emit("restart");
+    } catch (error) {
+      console.error("Error restarting game:", error);
+    } finally {
+      setIsRestarting(false);
+    }
+  };
+
   const handleWalletClose = () => {
     setIsWalletOpen(false);
   };
 
   const renderButtonContent = (charge: number, lives: number) => {
     if (processingAmount === charge) {
-      return "loading..";
+      return "Processing...";
     }
-    if (isProcessing) {
-      return "disabled";
+    if (isProcessing || isRestarting) {
+      return "Please wait...";
     }
     return (
       <>
@@ -144,7 +169,7 @@ function DeathModal({
               shadow="#429e34"
               className="p-2 text-sm w-1/3 min-w-0"
               onClick={() => handleChargeClick(0.2)}
-              disabled={isProcessing || txnLock}
+              disabled={isProcessing || txnLock || isRestarting}
             >
               {renderButtonContent(0.2, 1)}
             </Button>
@@ -154,7 +179,7 @@ function DeathModal({
               shadow="#429e34"
               className="p-2 text-sm w-1/3 min-w-0"
               onClick={() => handleChargeClick(0.5)}
-              disabled={isProcessing || txnLock}
+              disabled={isProcessing || txnLock || isRestarting}
             >
               {renderButtonContent(0.5, 3)}
             </Button>
@@ -164,7 +189,7 @@ function DeathModal({
               shadow="#429e34"
               onClick={() => handleChargeClick(1)}
               className="p-2 text-sm w-1/3 min-w-0"
-              disabled={isProcessing || txnLock}
+              disabled={isProcessing || txnLock || isRestarting}
             >
               {renderButtonContent(1, 6)}
             </Button>
@@ -175,16 +200,18 @@ function DeathModal({
           <Button
             bg="transparent"
             shadow="#429e34"
-            className="text-sm mb-2"
-            onClick={() => restart()}
+            className="text-sm mb-2 min-w-[200px]"
+            onClick={handleRestart}
+            disabled={isProcessing || txnLock || isRestarting}
           >
-            Start all over Again
+            {isRestarting ? "Restarting..." : "Start all over Again"}
           </Button>
           <Button
             bg="transparent"
             shadow="#429e34"
             className="space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
             onClick={backToMainMenu}
+            disabled={isProcessing || txnLock || isRestarting}
           >
             <p>Exit to MainMenu</p> <BsArrowRight className="" />
           </Button>
@@ -347,6 +374,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
           scene={scene}
           setLives={setLives}
           setDeathModalVisible={setDeathModalVisible}
+          setActiveToast={setActiveToast}
         />
       </dialog>
 

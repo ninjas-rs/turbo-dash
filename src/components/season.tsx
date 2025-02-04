@@ -4,7 +4,7 @@ import { BN } from '@coral-xyz/anchor';
 import PixelatedCard from './pixelated-card';
 import { getRoundCounterAccount, getGlobalAccount } from '@/utils/pdas';
 import { useCapsuleStore } from '@/stores/useCapsuleStore';
-import { fetchPlayerState, PlayerState } from '@/utils/transactions';
+import { fetchPlayerState } from '@/utils/transactions';
 import { getEthPrice } from '@/app/actions';
 
 interface ContestDetails {
@@ -53,7 +53,7 @@ function Season() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
   const { signer } = useCapsuleStore();
-  const [playerState, setPlayerState] = useState<PlayerState | null>(null);
+  const [playerState, setPlayerState] = useState(null);
 
   useEffect(() => {
     const fetchContestDetails = async () => {
@@ -120,7 +120,7 @@ function Season() {
         if (ethPrice) {
           details.prizePoolUsd = details.prizePool * ethPrice;
         } else {
-          console.error("Error fetching ETH price");
+          console.log("Error fetching ETH price");
         }
 
         if (signer?.address) {
@@ -134,6 +134,8 @@ function Season() {
             latestContestId
           );
 
+          console.log("Player state:", playerState);
+
           setPlayerState(playerState);
           console.log("Player state:", playerState);
           details.userScore = playerState?.currentScore;
@@ -142,7 +144,7 @@ function Season() {
         setContestDetails(details);
         setTimeLeft(calculateTimeLeft(details.endTime));
       } catch (error) {
-        console.error("Error fetching contest details:", error);
+        console.log("Error fetching contest details:", error);
       } finally {
         setLoading(false);
       }

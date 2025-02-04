@@ -41,11 +41,11 @@ import { getEthPrice } from "@/app/actions";
  */
 
 
-export interface PlayerState {
-  owner: PublicKey;
-  contestId: number;
-  currentScore: number;
-}
+// export interface PlayerState {
+//   owner: PublicKey;
+//   contestId: number;
+//   currentScore: number;
+// }
 
 
 /**
@@ -111,7 +111,7 @@ export const fetchPlayerState = async (
   programId: PublicKey,
   playerPubkey: PublicKey,
   contestId: number
-): Promise<PlayerState | null> => {
+) => {
   try {
     const [playerPDA] = PublicKey.findProgramAddressSync(
       [

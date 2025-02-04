@@ -396,6 +396,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           const status = await joinContest();
           const joined = status?.joined;
           const url = status?.url;
+
           if (joined) {
             scene.scene.start("Game");
           } else {
