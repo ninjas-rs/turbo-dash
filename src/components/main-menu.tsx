@@ -252,7 +252,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       // just restart the game session.
       if (playerState) {
         console.log("Player has already joined the contest");
-        let signature = await executeRefillLivesTxn(signer, connection, programId, 0.2, false);
+        let signature = await executeRefillLivesTxn(signer, connection, 0.2, false);
         return {
           "signature": signature,
           "joined": true,

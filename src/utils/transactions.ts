@@ -189,13 +189,14 @@ interface RefillLivesParams {
 export const executeRefillLivesTxn = async(
   signer,
   connection,
-  programId,
   charge,
   shouldContinue,
 ): Promise<string> => {
   if (!signer?.address) {
     throw new Error("No signer available");
   }
+
+  const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
   const pubkey = new PublicKey(signer.address);
   const latestContest = await fetchLatestContestId();
@@ -216,7 +217,7 @@ export const executeRefillLivesTxn = async(
     body: JSON.stringify({
       userPubKey: pubkey.toBase58(),
       roundId: latestContest.data.contestId,
-      contestPubKey: latestContest.contestPubKey.toBase58(),
+      contestPubKey: latestContest.contestPubKey,
       shouldContinue,
       charge: chargeSol,
     }),
