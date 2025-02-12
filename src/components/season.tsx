@@ -4,7 +4,7 @@ import { BN } from '@coral-xyz/anchor';
 import PixelatedCard from './pixelated-card';
 import { getRoundCounterAccount, getGlobalAccount } from '@/utils/pdas';
 import { useCapsuleStore } from '@/stores/useCapsuleStore';
-import { fetchPlayerState } from '@/utils/transactions';
+import { fetchLatestContestId, fetchPlayerState } from '@/utils/transactions';
 import { getEthPrice } from '@/app/actions';
 
 interface ContestDetails {
@@ -58,6 +58,8 @@ function Season() {
   useEffect(() => {
     const fetchContestDetails = async () => {
       try {
+        console.log("Fetching contest details...");
+
         const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT!);
         const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
@@ -70,10 +72,11 @@ function Season() {
           return;
         }
 
-        const count = new BN(counterAccount.data.slice(8), 'le').toNumber();
-
-        if (count === 0) {
-          console.log("No contests created yet");
+        const latestContest = await fetchLatestContestId();
+        const latestContestId = latestContest?.data.contestId; 
+        
+        if (!latestContestId) {
+          console.log("No contest found");
           setLoading(false);
           return;
         }
@@ -88,7 +91,6 @@ function Season() {
         }
 
         const authority = new PublicKey(globalAccount.data.slice(8, 40));
-        const latestContestId = count - 1;
         const [contestPDA] = PublicKey.findProgramAddressSync(
           [
             Buffer.from("contest"),

@@ -251,7 +251,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       const pubkey = new PublicKey(signer.address);
       const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
-      const latestContest = await fetchLatestContestId(connection, programId);
+      const latestContest = await fetchLatestContestId();
       const latestContestId = latestContest?.data.contestId || null;
 
       if (!latestContestId || !latestContest?.data?.endTime) {
@@ -360,7 +360,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
       const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
-      const latestContest = await fetchLatestContestId(connection, pubkey);
+      const latestContest = await fetchLatestContestId();
 
       console.log("Latest contest:", latestContest?.data);
 
@@ -371,6 +371,9 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         setLoading(false);
         return;
       }
+
+      console.log("Latest contest endtime: ", latestContest?.data?.endTime);
+      console.log("Current time: ", Date.now() / 1000);
 
       if (latestContest?.data?.endTime < Date.now() / 1000) {
         console.log("Contest has ended");

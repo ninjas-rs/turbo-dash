@@ -5,6 +5,7 @@ import { BN } from "@coral-xyz/anchor";
 const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID);
 
 export const getGlobalAccount = () => {
+  console.log("programId", programId);
   return PublicKey.findProgramAddressSync(
     [Buffer.from("global")],
     programId,

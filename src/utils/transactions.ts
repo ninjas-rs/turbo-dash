@@ -153,76 +153,26 @@ export const fetchPlayerState = async (
   }
 };
 
-export const fetchLatestContestId = async (
-  connection: Connection,
-  programId: PublicKey
-) => {
+export const fetchLatestContestId = async () => {
   try {
-    const counterPDA = getRoundCounterAccount();
-    const counterAccount = await connection.getAccountInfo(counterPDA);
-    
-    if (!counterAccount) {
-      console.log("No counter account found");
+    const response = await fetch('/api/latest-contest');
+    if (!response.ok) {
+      console.log("Error fetching latest contest:", response.statusText);
       return null;
     }
     
-    const count = new BN(counterAccount.data.slice(8), 'le').toNumber();
-    if (count === 0) {
-      console.log("No contests created yet");
+    const result = await response.json();
+    if (!result.data) {
+      console.log("No contest data found");
       return null;
     }
 
-
-    
-    const globalPDA = getGlobalAccount();
-    const globalAccount = await connection.getAccountInfo(globalPDA);
-    
-    if (!globalAccount) {
-      console.log("No global account found");
-      return null;
-    }
-    
-    const authority = new PublicKey(globalAccount.data.slice(8, 40));
-    const latestContestId = count - 1;
-
-    console.log("Latest contest id:", latestContestId);
-    
-    const contestPubKey = getContestAccount(authority, latestContestId);
-    const contestAccount = await connection.getAccountInfo(contestPubKey);
-    
-    if (!contestAccount) {
-      console.log("No contest account found");
-      return null;
-    }
-
-    // fetch latest contest data
-    // const contestData = contestAccount.data;
-    // const data = {
-    //   contestId: new BN(contestData.slice(8, 16), 'le').toNumber(),
-    //   startTime: new BN(contestData.slice(16, 24), 'le').toNumber(),
-    //   endTime: new BN(contestData.slice(24, 32), 'le').toNumber(),
-    //   pot: new BN(contestData.slice(32, 40), 'le').toNumber(),
-    //   totalPlayers: new BN(contestData.slice(40, 48), 'le').toNumber(),
-    //   totalObstacles: new BN(contestData.slice(48, 56), 'le').toNumber(),
-    // };
-
-    // fetch latest contest data
-    const contestData = contestAccount.data;
-    const data = {
-      contestId: safeNumber(new BN(contestData.slice(8, 16), 'le')),       // id: u64
-      creator: new PublicKey(contestData.slice(16, 48)),                   // creator: Pubkey (32 bytes)
-      startTime: safeNumber(new BN(contestData.slice(48, 56), 'le')),      // start_time: i64 
-      endTime: safeNumber(new BN(contestData.slice(56, 64), 'le')),        // end_time: i64
-      prizePool: safeNumber(new BN(contestData.slice(64, 72), 'le')),      // prize_pool: u64
-      highestScore: safeNumber(new BN(contestData.slice(72, 80), 'le')),   // highest_score: u64
-      leader: new PublicKey(contestData.slice(80, 112)),                   // leader: Pubkey
-      teamAccount: new PublicKey(contestData.slice(112, 144)),             // team_account: Pubkey
-      totalParticipants: safeNumber(new BN(contestData.slice(144, 152), 'le')), // total_participants: u64
+    return {
+      data: result.data,
+      contestPubKey: result.contestPubKey
     };
-
-    return { data, contestPubKey };
   } catch (error) {
-    console.log("Error fetching latest contest id:", error);
+    console.log("Error fetching latest contest:", error);
     return null;
   }
 };
@@ -248,7 +198,7 @@ export const executeRefillLivesTxn = async(
   }
 
   const pubkey = new PublicKey(signer.address);
-  const latestContest = await fetchLatestContestId(connection, programId);
+  const latestContest = await fetchLatestContestId();
   
   if (!latestContest?.data.contestId) {
     throw new Error("No active contests found");

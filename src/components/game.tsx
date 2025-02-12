@@ -254,7 +254,7 @@ export default function Game({ scene }: { scene: Phaser.Scene }) {
           return;
         }
         const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID);
-        const latestContest = await fetchLatestContestId(connection, programId);
+        const latestContest = await fetchLatestContestId();
         const latestContestId = latestContest?.data.contestId || null;
         if (!latestContestId) {
           console.error("No active contests found");
