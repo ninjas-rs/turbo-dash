@@ -76,7 +76,7 @@ const formatScore = (score: number) => {
 
 function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([]);
-  
+
   function fetchLeaderboard() {
     fetch("/api/leaderboard")
       .then((res) => res.json())
@@ -170,35 +170,11 @@ export function ChargeModal({ onClose, capsuleClient }) {
             To start the game, you must have a minimum balance of 0.2$!
           </p>
           <p className="text-center text-xl pb-3">Get lives</p>
-          <div className="flex flex-row w-full pb-8">
-            {/* <Button
-              bg="transparent"
-              shadow="#429e34"
-              className="p-4 text-sm w-1/3"
-              onClick={handleChargeClick}
-            >
-              <p className="text-xl">0.2$</p> (1 life)
-            </Button>
+          <div className="flex flex-row w-full pb-8 justify-center items-center">
             <Button
               bg="transparent"
               shadow="#429e34"
-              className="p-4 text-sm w-1/3"
-              onClick={handleChargeClick}
-            >
-              <p className="text-xl">0.5$</p> (3 lives)
-            </Button>
-            <Button
-              bg="transparent"
-              shadow="#429e34"
-              className="p-4 text-sm w-1/3"
-              onClick={handleChargeClick}
-            >
-              <p className="text-xl">1$</p> (6 lives)
-            </Button> */}
-            <Button
-              bg="transparent"
-              shadow="#429e34"
-              className="p-4 text-sm w-1/3"
+              className="p-4 text-sm w-1/3 text-center"
               onClick={handleChargeClick}
             >
               <p className="text-xl">Deposit funds</p>
@@ -421,7 +397,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         console.log("Latest contest ID:", latestContestId);
         console.log("Player contest ID:", playerState.contestId);
         console.log("Joining new contest...");
-        
+
         try {
           // const joined = await joinContest();
           const status = await joinContest();
@@ -436,7 +412,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           }
         } catch (error) {
           console.log("Error joining contest:", error);
-        } 
+        }
       } else if (playerState.contestId === latestContestId) {
         // player has already joined the latest contest
         const status = await joinContest();
