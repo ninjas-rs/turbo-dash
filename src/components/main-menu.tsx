@@ -347,6 +347,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
       const balance = parseFloat(balanceUsd || "0");
       if (balance < 0.2) {
+        console.log("Insufficient balance");
         setIsRechargeModalOpen(true);
         return;
       }
@@ -489,12 +490,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
         <Season />
       </div>
-      {/* {isRechargeModalOpen && (
-        // <ChargeModal
-        //   onClose={() => setIsRechargeModalOpen(false)}
-        //   // capsuleClient={capsuleClient}
-        // />
-      )} */}
+      {isRechargeModalOpen && (
+        <ChargeModal
+          onClose={() => setIsRechargeModalOpen(false)}
+          capsuleClient={capsuleClient}
+        />
+      )}
       {activeToast && <TransactionToastQueue activeSignature={activeToast} />}
     </div>
   );
