@@ -205,6 +205,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const { capsuleClient, initialize, connection } = useCapsule();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [activeToast, setActiveToast] = useState<string | null>(null);
+  const [pendingSignatures, setPendingSignatures] = useState(new Set<string>());
   const [loading, setLoading] = useState(false);
 
 
@@ -318,6 +319,10 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
   const handleJoin = async () => {
     try {
+      const tempSignature = 'pending-joining';
+      setPendingSignatures(new Set([tempSignature]));
+      setActiveToast(tempSignature);
+      
       setLoading(true);
       console.log("Balance: ", balanceUsd);
 
@@ -383,6 +388,15 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           const joined = status?.joined;
           const signature = status?.signature;
 
+          if (signature) {
+            setPendingSignatures(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(tempSignature);  // Remove temporary signature
+              return newSet;
+            });
+            setActiveToast(signature);  // Set the actual signature
+          }
+
           if (joined) {
             scene.scene.start("Game");
           } else {
@@ -390,6 +404,11 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           }
         } catch (error) {
           console.log("Error joining contest:", error);
+          setPendingSignatures(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(tempSignature);
+            return newSet;
+          });
         }
       } else if (playerState.contestId !== latestContestId) {
         // player has joined a different contest
@@ -472,7 +491,10 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           capsuleClient={capsuleClient}
         />
       )}
-      {activeToast && <TransactionToastQueue activeSignature={activeToast} />}
+      <TransactionToastQueue 
+        activeSignature={activeToast} 
+        pendingSignatures={pendingSignatures}
+      />
     </div>
   );
 }

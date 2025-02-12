@@ -1,136 +1,13 @@
 import { Button, Card } from "pixel-retroui";
 import { useEffect, useState } from "react";
 import WalletState, { WalletModal } from "./wallet-state";
-import { BsArrowRight, BsCheckCircle, BsHourglass } from "react-icons/bs";
+import { BsArrowRight } from "react-icons/bs";
 import { useCapsule } from "@/hooks/useCapsule";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { executeRefillLivesTxn, fetchLatestContestId } from "@/utils/transactions";
 import { PublicKey, Transaction } from "@solana/web3.js";
-
-const TransactionCounter = ({ pendingCount, completedCount }) => {
-  return (
-    <Card
-      bg="#239B3F"
-      borderColor="#26541B"
-      shadowColor="#59b726"
-      className="p-2 flex flex-row space-x-4"
-    >
-      <div className="flex items-center space-x-2">
-        <span className="text-sm">Pending:</span>
-        <span className="font-mono text-sm bg-yellow-600 px-2 py-1 rounded">
-          {pendingCount}
-        </span>
-      </div>
-      <div className="flex items-center space-x-2">
-        <span className="text-sm">Completed:</span>
-        <span className="font-mono text-sm bg-green-700 px-2 py-1 rounded">
-          {completedCount}
-        </span>
-      </div>
-    </Card>
-  );
-};
-
-const SingleToast = ({ signature, status }) => {
-  const shortSignature = `${signature.slice(0, 4)}...${signature.slice(-4)}`;
-  
-  return (
-    <Card
-      bg={status === 'pending' ? "#bdba25" : "#239B3F"}
-      borderColor={status === 'pending' ? "#7e851b" : "#26541B"}
-      shadowColor={status === 'pending' ? "#7e851b" : "#59b726"}
-      className="p-3 flex items-center space-x-2 min-w-[280px] mb-2 transform transition-all duration-300"
-    >
-      {status === 'pending' ? (
-        <BsHourglass className="text-[#7e851b] text-xl flex-shrink-0 animate-spin" />
-      ) : (
-        <BsCheckCircle className="text-[#26541B] text-xl flex-shrink-0" />
-      )}
-      <div className="flex flex-col flex-grow min-w-0">
-        <p className="text-sm">
-          {status === 'pending' ? 'Transaction Pending...' : 'Transaction Success!'}
-        </p>
-        <p className="text-xs text-[#26541B] font-mono truncate">{shortSignature}</p>
-        <a 
-          href={`https://explorer.solana.com/tx/${signature}?cluster=devnet`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-[#26541B] underline hover:text-[#1b3d13]"
-        >
-          View on Explorer
-        </a>
-      </div>
-    </Card>
-  );
-};
-
-const TransactionToastQueue = ({ activeSignature, pendingSignatures = new Set() }) => {
-  const [toasts, setToasts] = useState([]);
-  
-  useEffect(() => {
-    if (activeSignature) {
-      const newToast = {
-        id: Math.random().toString(),
-        signature: activeSignature,
-        timestamp: Date.now(),
-        status: pendingSignatures.has(activeSignature) ? 'pending' : 'success'
-      };
-
-      setToasts(prev => {
-        // If toast already exists, update its status
-        if (prev.some(t => t.signature === activeSignature)) {
-          return prev.map(t => 
-            t.signature === activeSignature 
-              ? { ...t, status: 'success', timestamp: Date.now() }
-              : t
-          );
-        }
-        // Otherwise add new toast
-        return [newToast, ...prev];
-      });
-    }
-  }, [activeSignature, pendingSignatures]);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = Date.now();
-      setToasts(prev => 
-        prev.filter(toast => {
-          const age = now - toast.timestamp;
-          // Remove pending toasts if they're no longer in pendingSignatures
-          if (toast.status === 'pending' && !pendingSignatures.has(toast.signature)) {
-            return false;
-          }
-          // Keep pending toasts, and recent success toasts
-          return toast.status === 'pending' || (age < 2000 && toast.status === 'success');
-        })
-      );
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [pendingSignatures]);
-
-  return (
-    <div className="fixed top-4 right-4 z-50">
-      <div className="flex flex-col">
-        {toasts.map((toast, index) => (
-          <div 
-            key={toast.id}
-            className="transform transition-all duration-300"
-            style={{
-              opacity: 1 - (index * 0.2),
-              transform: `translateY(${index * 8}px)`,
-            }}
-          >
-            <SingleToast 
-              signature={toast.signature} 
-              status={toast.status}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+import TransactionCounter from "./counter";
+import TransactionToastQueue from "./toast";
 
 const DEFAULT_LIVES = 3;
 
@@ -168,7 +45,7 @@ const makeLives = (len) =>
     }
   
     const handleChargeClick = async (charge) => {
-      const tempSignature = 'pending-' + Math.random().toString(36).slice(2);
+      const tempSignature = 'pending-$' + charge;
       try {
         if (isProcessing || txnLock || isRestarting) {
           console.log("Transaction already in progress");
@@ -254,12 +131,6 @@ const makeLives = (len) =>
     
       } catch (error) {
         console.error("Error refilling lives:", error);
-        // Reset transaction stats on error
-        setTransactionStats({
-          pending: 0,
-          completed: 0
-        });
-        
         // Clean up pending signature if error occurs
         setPendingSignatures(prev => {
           const next = new Set(prev);
@@ -272,6 +143,10 @@ const makeLives = (len) =>
         setProcessingAmount(null);
         // Add slight delay before unlocking to prevent double-clicks
         setTimeout(() => setTxnLock(false), 1000);
+        setTransactionStats({
+          pending: 0,
+          completed: 0
+        });
       }
     };
   
@@ -288,7 +163,7 @@ const makeLives = (len) =>
         // Reset SP to 0
         setSp(0);
   
-        const tempSignature = 'pending-' + Math.random().toString(36).slice(2);
+        const tempSignature = 'pending-' + 'restart';
         setPendingSignatures(prev => new Set(prev).add(tempSignature));
         setActiveToast(tempSignature);
   
@@ -477,7 +352,7 @@ useEffect(() => {
         throw new Error("No active contests found");
       }
 
-      const tempSignature = 'pending-' + scoreKey; 
+      const tempSignature = 'pending-' + sp;
       setPendingSignatures(prev => new Set(prev).add(tempSignature));
       setActiveToast(tempSignature);
 
@@ -548,7 +423,7 @@ useEffect(() => {
         pending: prev.pending + 1
       }));
 
-      const tempSignature = 'pending-' + Math.random().toString(36).slice(2);
+      const tempSignature = 'pending-restart';
       setPendingSignatures(prev => new Set(prev).add(tempSignature));
       setActiveToast(tempSignature);
 
