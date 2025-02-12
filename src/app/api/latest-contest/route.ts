@@ -124,8 +124,7 @@ export async function GET(request: Request) {
         let contestResponse = await getCachedContest();
         let fromCache = false;
 
-        // if (contestResponse) {
-        if (false) {
+        if (contestResponse) {
             fromCache = true;
         } else {
             console.log("Cache miss - fetching from chain");
