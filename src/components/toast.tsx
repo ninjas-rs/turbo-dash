@@ -6,28 +6,30 @@ const SingleToast = ({ signature, status }) => {
   const shortSignature = `${signature.slice(0, 4)}...${signature.slice(-4)}`;
   
   return (
-    <Card
-      bg={status === 'pending' ? "#bdba25" : "#239B3F"}
-      borderColor={status === 'pending' ? "#7e851b" : "#26541B"}
-      shadowColor={status === 'pending' ? "#7e851b" : "#59b726"}
-      className="p-3 flex items-center space-x-2 min-w-[280px] mb-2 transform transition-all duration-300"
-    >
+    <Card className={`p-3 flex items-center space-x-2 min-w-[280px] mb-2 transform transition-all duration-300 
+      ${status === 'pending' ? 'bg-yellow-200 border-yellow-700' : 'bg-green-200 border-green-700'}`}>
       {status === 'pending' ? (
-        <BsHourglass className="text-[#7e851b] text-xl flex-shrink-0 animate-spin" />
+        <BsHourglass className="text-yellow-700 w-5 h-5 flex-shrink-0 animate-spin" />
       ) : (
-        <BsCheckCircle className="text-[#26541B] text-xl flex-shrink-0" />
+        <BsCheckCircle className="text-green-700 w-5 h-5 flex-shrink-0" />
       )}
       <div className="flex flex-col flex-grow min-w-0">
-        <p className="text-sm">
+        <p className="text-sm font-medium">
           {status === 'pending' ? 'Transaction Pending...' : 'Transaction Success!'}
         </p>
-        <p className="text-xs text-[#26541B] font-mono truncate">{shortSignature}</p>
+        <p className={`text-xs font-mono truncate ${status === 'pending' ? 'text-yellow-700' : 'text-green-700'}`}>
+          {shortSignature}
+        </p>
         {status !== 'pending' && (
           <a 
             href={`https://explorer.solana.com/tx/${signature}?cluster=devnet`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-[#26541B] underline hover:text-[#1b3d13]"
+            className="text-xs text-green-700 underline hover:text-green-900 cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              window.open(`https://explorer.solana.com/tx/${signature}?cluster=devnet`, '_blank', 'noopener,noreferrer');
+            }}
           >
             View on Explorer
           </a>

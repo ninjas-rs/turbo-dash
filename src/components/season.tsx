@@ -218,7 +218,7 @@ function Season() {
             <h2 className="text-2xl sm:text-3xl text-bold">
               {contestDetails.userScore !== undefined ?
                 `${contestDetails.userScore}` :
-                'Not participated'}
+                '0'}
             </h2>
           </div>
   
