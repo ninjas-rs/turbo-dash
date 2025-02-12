@@ -17,19 +17,19 @@ const obstaclesConfig = {
   types: [
     {
       type: "coffin",
-      points: 3,
+      points: 1,
       y: 480,
       hitboxOffset: { width: 60, height: 80 },
     },
     {
       type: "grave_1",
-      points: 2,
+      points: 1,
       y: 480,
       hitboxOffset: { width: 40, height: 40 },
     },
     {
       type: "grave_2",
-      points: 2,
+      points: 1,
       y: 480,
       hitboxOffset: { width: 70, height: 40 },
     },
@@ -303,7 +303,8 @@ export class Game extends Scene {
       obs.x -= this.obstaclesSpeed * (delta / 1000);
 
       if (obs.x < this.player.x && !obs.passed) {
-        this.events.emit("score-inc", obs.points);
+        // this.events.emit("score-inc", obs.points);
+        this.events.emit("obstacle-passed", obs.points);
 
         obs.passed = true;
       }

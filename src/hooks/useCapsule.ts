@@ -43,6 +43,7 @@ export const useCapsule = () => {
       setActive(isActive);
       if (isActive) {
         const wallets = await capsuleClient.getWallets();
+        console.log("Wallets", wallets);
         setWallets(wallets);
 
         // get the first key value
@@ -53,11 +54,14 @@ export const useCapsule = () => {
           return;
         }
 
+
+
         const wallet = Object.values(wallets)[0]
 
         const signer = new CapsuleSolanaWeb3Signer(capsuleClient, connection, wallet.id);
         if (signer) setSigner(signer);
       }
+
       console.log("Signer initialized successfully", isActive);
     } catch (error) {
       console.error("Signer initialization failed:", error);
