@@ -17,12 +17,6 @@ export class MainMenu extends Scene {
   }
 
   create() {
-    this.backgroundMusic = this.sound.add("main_menu_music", {
-      loop: true,
-    }) as Phaser.Sound.WebAudioSound;
-
-    this.backgroundMusic.play();
-
     EventBus.emit("current-scene-ready", this);
   }
 }
