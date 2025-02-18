@@ -189,19 +189,16 @@ interface RefillLivesParams {
 export const executeClaimPrizeTxn = async(
   signer,
   connection,
+  contestId: number,
+  contestPubKey: string, // Just need the contest's public key
 ): Promise<string> => {
   if (!signer?.address) {
     throw new Error("No signer available");
   }
 
-  const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
   const pubkey = new PublicKey(signer.address);
   
-  const latestContest = await fetchLatestContestId();
-  if (!latestContest?.data.contestId) {
-    throw new Error("No active contests found");
-  }
-
+  // Call the claim prize API
   const response = await fetch('/api/claim-prize', {
     method: 'POST',
     headers: {
@@ -209,8 +206,8 @@ export const executeClaimPrizeTxn = async(
     },
     body: JSON.stringify({
       userPubKey: pubkey.toBase58(),
-      roundId: latestContest.data.contestId,
-      contestPubKey: latestContest.contestPubKey,
+      roundId: contestId,
+      contestPubKey: contestPubKey,
     }),
   });
 
@@ -221,12 +218,14 @@ export const executeClaimPrizeTxn = async(
 
   const { txn: base64Transaction } = await response.json();
 
+  // Deserialize and send transaction
   const transaction = Transaction.from(Buffer.from(base64Transaction, 'base64'));
   const signature = await signer.sendTransaction(transaction, {
     skipPreflight: false,
     preflightCommitment: "confirmed",
   });
 
+  // Wait for transaction confirmation
   await connection.confirmTransaction(signature);
 
   let solanaurl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
