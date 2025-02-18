@@ -186,6 +186,58 @@ interface RefillLivesParams {
   shouldContinue: boolean;
 }
 
+export const executeClaimPrizeTxn = async(
+  signer,
+  connection,
+): Promise<string> => {
+  if (!signer?.address) {
+    throw new Error("No signer available");
+  }
+
+  const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
+  const pubkey = new PublicKey(signer.address);
+  
+  const latestContest = await fetchLatestContestId();
+  if (!latestContest?.data.contestId) {
+    throw new Error("No active contests found");
+  }
+
+  const response = await fetch('/api/claim-prize', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      userPubKey: pubkey.toBase58(),
+      roundId: latestContest.data.contestId,
+      contestPubKey: latestContest.contestPubKey,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to get claim prize transaction');
+  }
+
+  const { txn: base64Transaction } = await response.json();
+
+  const transaction = Transaction.from(Buffer.from(base64Transaction, 'base64'));
+  const signature = await signer.sendTransaction(transaction, {
+    skipPreflight: false,
+    preflightCommitment: "confirmed",
+  });
+
+  await connection.confirmTransaction(signature);
+
+  let solanaurl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+  
+  console.log("Successfully claimed prize!");
+  console.log("Transaction signature:", signature);
+  console.log(solanaurl);
+
+  return signature;
+}
+
 export const executeRefillLivesTxn = async(
   signer,
   connection,
