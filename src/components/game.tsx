@@ -124,7 +124,7 @@ function DeathModal({
       }
 
       // Update game state
-      setSp(0); // Reset SP counter
+      // setSp(0); // Reset SP counter
       setLives(makeLives(chargeMap[charge]));
       setDeathModalVisible(false);
       scene.events.emit("restart");

@@ -12,7 +12,7 @@ export class MainMenu extends Scene {
 
   init() {
     this.events.on("shutdown", () => {
-      this.backgroundMusic.destroy();
+      this.backgroundMusic?.destroy();
     });
   }
 
