@@ -513,7 +513,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
           <WalletState text="Sign in to Play" capsuleClient={capsuleClient} initialize={initialize} />
-          {signer ? <ClaimButton connection={capsuleClient} signer={signer}/> : <></>}
+          {signer ? <ClaimButton connection={connection} signer={signer}/> : <></>}
         </div>
 
       </div>
