@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 export const TurbodashIdl: TurbodashIdl = {
   // address: "A16ypHQTbjj6A3MFeAk8CFpz9G4sPXyxD1jj3YxNw6gm",
   address: "Bkw3hGBupsMdMjxZyS9BYeagK7oBe6wHSTMigYmeip6Z",

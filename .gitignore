@@ -17,6 +17,8 @@
 !.yarn/releases
 !.yarn/versions
 
+admin.json
+
 # testing
 /coverage
 

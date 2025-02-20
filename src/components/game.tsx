@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 import { Button, Card } from "pixel-retroui";
 import { useCallback, useEffect, useRef, useState } from "react";
 import WalletState, { WalletModal } from "./wallet-state";
@@ -11,7 +13,7 @@ import TransactionToastQueue from "./toast";
 
 const DEFAULT_LIVES = 3;
 
-const makeLives = (len) =>
+const makeLives = (len: number) =>
   Array.from({ length: len }).map(() => ({
     exhausted: false,
   }));
@@ -312,7 +314,7 @@ export default function Game({ scene }) {
   const [lives, setLives] = useState(makeLives(DEFAULT_LIVES));
   const { signer, isActive } = useCapsuleStore();
   const [sp, setSp] = useState(0);
-  const [activeToast, setActiveToast] = useState(null);
+  const [activeToast, setActiveToast] = useState<string | null>(null);
   const [pendingSignatures, setPendingSignatures] = useState(new Set());
   const [pendingScoreUpdates, setPendingScoreUpdates] = useState(new Set());
   const pendingTransactionsRef = useRef(0);

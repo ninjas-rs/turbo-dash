@@ -34,104 +34,115 @@ const loadKeyPairFromFile = (
 };
 
 export const POST = async (req: NextRequest) => {
-  const body = await req.json();
-  const userPubKey = body.userPubKey;
-  const roundId = body.roundId;
-  const contestPubKey = body.contestPubKey;
+  try {
+    const body = await req.json();
+    const userPubKey = body.userPubKey;
+    const roundId = body.roundId;
+    const contestPubKey = body.contestPubKey;
 
-  console.log("contestPubKey: ", contestPubKey);
+    console.log("contestPubKey: ", contestPubKey);
 
-  const connection = new Connection(env.NEXT_PUBLIC_RPC_ENDPOINT);
+    const connection = new Connection(env.NEXT_PUBLIC_RPC_ENDPOINT);
 
-  const keypair = loadKeyPairFromFile(process.cwd() + "/server_wallet.json");
-  const publicKey = keypair.publicKey;
-  const secretKey = keypair.secretKey;
+    const keypair = loadKeyPairFromFile(process.cwd() + "/server_wallet.json");
+    const publicKey = keypair.publicKey;
+    const secretKey = keypair.secretKey;
 
-  const provider = new AnchorProvider(
-    connection,
-    {
-      publicKey: publicKey,
-      signTransaction: async () => {
-        return Promise.reject();
+    const provider = new AnchorProvider(
+      connection,
+      {
+        publicKey: publicKey,
+        signTransaction: async () => {
+          return Promise.reject();
+        },
+        signAllTransactions: async () => {
+          return await Promise.reject();
+        },
       },
-      signAllTransactions: async () => {
-        return await Promise.reject();
-      },
-    },
-    { commitment: "confirmed" },
-  );
+      { commitment: "confirmed" },
+    );
 
-  const program = new Program(TurbodashIdl, provider);
+    const program = new Program(TurbodashIdl, provider);
 
-  const SIGNATURE_MESSAGE = `TurboDash:Server:${userPubKey}:${Date.now().toString()}`;
-  const MESSAGE = Uint8Array.from(Buffer.from(SIGNATURE_MESSAGE));
-  const signature = await sign(MESSAGE, secretKey.slice(0, 32));
+    const SIGNATURE_MESSAGE = `TurboDash:Server:${userPubKey}:${Date.now().toString()}`;
+    const MESSAGE = Uint8Array.from(Buffer.from(SIGNATURE_MESSAGE));
+    const signature = await sign(MESSAGE, secretKey.slice(0, 32));
 
-  const FEE = new BN(0.00001 * LAMPORTS_PER_SOL);
+    const FEE = new BN(0.00001 * LAMPORTS_PER_SOL);
 
-  const allContests = await program.account.contestState.all();
-  if (allContests.length === 0) {
-      return [];
-  }
+    const allContests = await program.account.contestState.all();
+    if (allContests.length === 0) {
+      return NextResponse.json(
+        { error: "No contests found" },
+        { status: 404 }
+      );
+    }
 
-  // assuming that we only have one contest
-  // at a time
-  let latestContest = allContests[0];
+    // assuming that we only have one contest
+    // at a time
+    let latestContest = allContests[0];
 
-  for (const contest of allContests) {
+    for (const contest of allContests) {
       if (contest.account.id.toNumber() > latestContest.account.id.toNumber()) {
-          latestContest = contest;
+        latestContest = contest;
       }
+    }
+    
+    const playerStateKey = getPlayerStateAccount(
+      new PublicKey(userPubKey),
+      roundId as number,
+    );
+
+    const sigIxn = Ed25519Program.createInstructionWithPublicKey({
+      signature: signature,
+      publicKey: publicKey.toBytes(),
+      message: MESSAGE,
+    });
+
+    const scoreTxn = await program.methods
+      .recordProgress(
+        FEE,
+        Array.from(publicKey.toBuffer()),
+        Buffer.from(MESSAGE),
+        Array.from(signature),
+      )
+      .accountsStrict({
+        player: userPubKey,
+        playerState: playerStateKey,
+        contest: new PublicKey(contestPubKey),
+        ixSysvar: SYSVAR_INSTRUCTIONS_PUBKEY,
+        backendSigner: publicKey,
+        globalAccount: getGlobalAccount(),
+        systemProgram: SystemProgram.programId,
+        feesAccount: new PublicKey(env.FEES_ACCOUNT),
+      })
+      .preInstructions([sigIxn], true)
+      .transaction();
+
+    const response = await connection.getLatestBlockhash();
+    scoreTxn.recentBlockhash = response.blockhash;
+
+    scoreTxn.feePayer = new PublicKey(userPubKey);
+
+    scoreTxn.partialSign(keypair);
+
+    const serializedTransaction = scoreTxn.serialize({
+      requireAllSignatures: false,
+    });
+
+    const base64 = serializedTransaction.toString("base64");
+
+    return NextResponse.json(
+      {
+        txn: base64,
+      },
+      { status: 200 },
+    );
+  } catch (error) {
+    console.error('Error in POST handler:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-  
-  const playerStateKey = getPlayerStateAccount(
-    new PublicKey(userPubKey),
-    roundId as number,
-  );
-
-  const sigIxn = Ed25519Program.createInstructionWithPublicKey({
-    signature: signature,
-    publicKey: publicKey.toBytes(),
-    message: MESSAGE,
-  });
-
-  const scoreTxn = await program.methods
-    .recordProgress(
-      FEE,
-      Array.from(publicKey.toBuffer()),
-      Buffer.from(MESSAGE),
-      Array.from(signature),
-    )
-    .accountsStrict({
-      player: userPubKey,
-      playerState: playerStateKey,
-      contest: new PublicKey(contestPubKey),
-      ixSysvar: SYSVAR_INSTRUCTIONS_PUBKEY,
-      backendSigner: publicKey,
-      globalAccount: getGlobalAccount(),
-      systemProgram: SystemProgram.programId,
-      feesAccount: new PublicKey(env.FEES_ACCOUNT),
-    })
-    .preInstructions([sigIxn], true)
-    .transaction();
-
-  const response = await connection.getLatestBlockhash();
-  scoreTxn.recentBlockhash = response.blockhash;
-
-  scoreTxn.feePayer = new PublicKey(userPubKey);
-
-  scoreTxn.partialSign(keypair);
-
-  const serializedTransaction = scoreTxn.serialize({
-    requireAllSignatures: false,
-  });
-
-  const base64 = serializedTransaction.toString("base64");
-
-  return NextResponse.json(
-    {
-      txn: base64,
-    },
-    { status: 200 },
-  );
 };

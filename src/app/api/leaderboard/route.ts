@@ -11,7 +11,7 @@ const redis = new Redis({
     token: process.env.UPSTASH_REDIS_REST_TOKEN!
 });
 
-const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT);
+const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT!);
 
 const CACHE_KEY_PREFIX = "turbodash:leaderboard:contestId:";
 const CACHE_DURATION = 5; // 5 seconds
@@ -69,7 +69,7 @@ async function fetchFromChain(contestId: number) : Promise<LeaderboardEntry[]> {
         );
 
         console.log("Fetched player accounts:", playerAccounts);
-
+        //@ts-expect-error
         return playerAccounts
             .map(account => ({
                 address: account.account.owner.toString(),
@@ -90,6 +90,7 @@ async function fetchFromChain(contestId: number) : Promise<LeaderboardEntry[]> {
 async function getCachedLeaderboard(contestId: number): (Promise<LeaderboardEntry[] | null>) {
     const cacheKey = `${CACHE_KEY_PREFIX}${contestId}`;
     const cached = await redis.get(cacheKey);
+    //@ts-expect-error
     return cached || null;
 }
 

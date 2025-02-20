@@ -41,7 +41,10 @@ import TransactionToastQueue from "./toast";
 //   },
 // ];
 
-const LoadingButton = ({ onClick, loading }) => {
+const LoadingButton = ({ onClick, loading } : {
+  onClick: () => void;
+  loading: boolean;
+}) => {
   return (
     <div className="relative inline-block">
       <button
@@ -75,7 +78,15 @@ const formatScore = (score: number) => {
 };
 
 function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState<{
+    address: string;
+    score: number;
+  }[]>([
+    {
+      address: "",
+      score: 0,
+    }
+  ]);
 
   function fetchLeaderboard() {
     fetch("/api/leaderboard")
@@ -92,7 +103,7 @@ function Leaderboard() {
   }, []);
 
   return (
-    <PixelatedCard className="flex items-center justify-center min-h-0">
+    <PixelatedCard>
       <div className="flex flex-col items-center w-[70%]">
         <Card
           textColor="black"
@@ -142,7 +153,9 @@ function Leaderboard() {
   );
 }
 
-export function ContestEndedModal({ onClose }) {
+export function ContestEndedModal({ onClose }: {
+  onClose: () => void;
+}) {
   console.log("Contest ended modal");
 
   return (
@@ -173,7 +186,9 @@ export function ContestEndedModal({ onClose }) {
 }
 
 
-export function ChargeModal({ onClose, capsuleClient }) {
+export function ChargeModal({ onClose, capsuleClient }
+  : { onClose: () => void; capsuleClient: any }
+) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
 
   const handleChargeClick = () => {
@@ -234,7 +249,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const { isActive, balanceUsd, balance, signer } = useCapsuleStore();
   const { capsuleClient, initialize, connection } = useCapsule();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
-  const [activeToast, setActiveToast] = useState<string | null>(null);
+  const [activeToast, setActiveToast] = useState<string | undefined>(undefined);
   const [pendingSignatures, setPendingSignatures] = useState(new Set<string>());
   const [loading, setLoading] = useState(false);
   const [isContestEndedModalOpen, setIsContestEndedModalOpen] = useState(false);

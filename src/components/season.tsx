@@ -53,7 +53,11 @@ function Season() {
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
   const { signer } = useCapsuleStore();
-  const [playerState, setPlayerState] = useState(null);
+  const [playerState, setPlayerState] = useState<{
+    owner: PublicKey;
+    contestId: number;
+    currentScore: number;
+} | null>(null);
 
   useEffect(() => {
     const fetchContestDetails = async () => {

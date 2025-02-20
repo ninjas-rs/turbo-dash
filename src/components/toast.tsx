@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+//@ts-nocheck
+
+import 
+
+React, { useEffect, useState } from 'react';
 import { Card } from "pixel-retroui";
 import { BsCheckCircle, BsHourglass } from "react-icons/bs";
 
-const SingleToast = ({ signature, status }) => {
+const SingleToast = ({ signature, status } : {signature: string, status: string}) => {
   const shortSignature = `${signature.slice(0, 4)}...${signature.slice(-4)}`;
   
   return (

@@ -102,6 +102,7 @@ export const POST = async (req: NextRequest) => {
         const joinContestIx = await program.methods
             .joinContest()
             .accounts({
+                //@ts-expect-error
                 contest: latestContest.publicKey,
                 contestCounter: contestCounterPubkey,
                 player: player,

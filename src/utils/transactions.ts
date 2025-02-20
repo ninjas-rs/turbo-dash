@@ -1,5 +1,5 @@
 import { BN } from "@coral-xyz/anchor";
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, Connection } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, Connection, PublicKeyInitData } from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
 import { getContestAccount, getGlobalAccount, getRoundCounterAccount } from "./pdas";
 import { connection } from "next/server";
@@ -187,10 +187,10 @@ interface RefillLivesParams {
 }
 
 export const executeClaimPrizeTxn = async(
-  signer,
-  connection,
+  signer: { address: PublicKeyInitData; sendTransaction: (arg0: Transaction, arg1: { skipPreflight: boolean; preflightCommitment: string; }) => any; },
+  connection: { confirmTransaction: (arg0: any) => any; },
   contestId: number,
-  contestPubKey: string, // Just need the contest's public key
+  contestPubKey: string,
 ): Promise<string> => {
   if (!signer?.address) {
     throw new Error("No signer available");
@@ -238,10 +238,10 @@ export const executeClaimPrizeTxn = async(
 }
 
 export const executeRefillLivesTxn = async(
-  signer,
-  connection,
-  charge,
-  shouldContinue,
+  signer: CapsuleSolanaWeb3Signer | null,
+  connection: Connection,
+  charge: number,
+  shouldContinue: boolean,
 ): Promise<string> => {
   if (!signer?.address) {
     throw new Error("No signer available");

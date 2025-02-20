@@ -2,7 +2,7 @@ import { env } from "@/config/env";
 import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 
-const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID);
+const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
 export const getGlobalAccount = () => {
   console.log("programId", programId);

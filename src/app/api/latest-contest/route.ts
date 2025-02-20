@@ -12,7 +12,7 @@ const redis = new Redis({
     token: process.env.UPSTASH_REDIS_REST_TOKEN!
 });
 
-const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT);
+const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT!);
 
 const CACHE_KEY = "turbodash:latest-contest";
 const CACHE_DURATION = 60 * 5; // 5 minutes
@@ -103,6 +103,7 @@ async function fetchLatestContest(): Promise<ContestResponse | null> {
 async function getCachedContest(): Promise<ContestResponse | null> {
     try {
         const cached = await redis.get(CACHE_KEY);
+        //@ts-expect-error
         return cached || null;
     } catch (error) {
         console.error("Error getting cached contest:", error);
