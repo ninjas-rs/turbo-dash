@@ -142,6 +142,36 @@ function Leaderboard() {
   );
 }
 
+export function ContestEndedModal({ onClose }) {
+  console.log("Contest ended modal");
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+      <Card
+        bg="#239B3F"
+        borderColor="#26541B"
+        shadowColor="#59b726"
+        className="flex flex-col p-2 pointer-events-auto"
+      >
+        <h2 className="z-50 text-2xl text-[#671919] mb-4">
+          Contest Ended!
+        </h2>
+        <p className="pb-4">
+          The current contest has ended. Please wait for the next contest to start!
+        </p>
+        <Button
+          bg="transparent"
+          shadow="#429e34"
+          className="space-x-2 text-sm !border-0 flex flex-row items-center justify-center"
+          onClick={onClose}
+        >
+          <p>Close</p> <BsArrowRight />
+        </Button>
+      </Card>
+    </div>
+  );
+}
+
 
 export function ChargeModal({ onClose, capsuleClient }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
@@ -207,6 +237,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const [activeToast, setActiveToast] = useState<string | null>(null);
   const [pendingSignatures, setPendingSignatures] = useState(new Set<string>());
   const [loading, setLoading] = useState(false);
+  const [isContestEndedModalOpen, setIsContestEndedModalOpen] = useState(false);
 
 
   useEffect(() => {
@@ -320,8 +351,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const handleJoin = async () => {
     try {
       const tempSignature = 'pending-joining';
-      setPendingSignatures(new Set([tempSignature]));
-      setActiveToast(tempSignature);
       
       setLoading(true);
       console.log("Balance: ", balanceUsd);
@@ -360,8 +389,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       if (latestContest?.data?.endTime < Date.now() / 1000) {
         console.log("Contest has ended");
         setLoading(false);
+        setIsContestEndedModalOpen(true);
         return;
       }
+
+      setPendingSignatures(new Set([tempSignature]));
+      setActiveToast(tempSignature);
 
       const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
 
@@ -485,6 +518,13 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
         <Season />
       </div>
+
+      {isContestEndedModalOpen && (
+        <ContestEndedModal
+          onClose={() => setIsContestEndedModalOpen(false)}
+        />
+      )}
+
       {isRechargeModalOpen && (
         <ChargeModal
           onClose={() => setIsRechargeModalOpen(false)}
