@@ -414,7 +414,6 @@ export default function Game({ scene }) {
       } catch (error) {
         console.log(error.toString());
         if (error.toString().includes("Transaction results in an account (0) with insufficient funds for rent.")) {
-          console.error("Insufficient funds for rent");
           setIsRechargeModalOpen(true);
           scene.events.emit("game-over");
           return;
