@@ -255,7 +255,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const [loading, setLoading] = useState(false);
   const [isContestEndedModalOpen, setIsContestEndedModalOpen] = useState(false);
 
-
   useEffect(() => {
     // while the wallet is not connected, keep loading true
     if (!isActive || (balanceUsd === null || balanceUsd === undefined)) {
@@ -513,7 +512,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
           <WalletState text="Sign in to Play" capsuleClient={capsuleClient} initialize={initialize} />
-          {signer ? <ClaimButton connection={connection} signer={signer}/> : <></>}
+          {signer ? <ClaimButton connection={connection} signer={signer} setActiveToast={setActiveToast} setToasts={setPendingSignatures} /> : <></>}
         </div>
 
       </div>

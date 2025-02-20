@@ -1,8 +1,5 @@
 //@ts-nocheck
-
-import 
-
-React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from "pixel-retroui";
 import { BsCheckCircle, BsHourglass } from "react-icons/bs";
 

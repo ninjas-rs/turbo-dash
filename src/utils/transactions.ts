@@ -191,14 +191,21 @@ export const executeClaimPrizeTxn = async(
   connection: { confirmTransaction: (arg0: any) => any; },
   contestId: number,
   contestPubKey: string,
+  setActiveToast: (arg0: string) => any,
+  setPendingSignatures: (toasts: Set<string>) => void,
 ): Promise<string> => {
   if (!signer?.address) {
     throw new Error("No signer available");
   }
 
   const pubkey = new PublicKey(signer.address);
+
+  const tempSignature = 'pending-claim';
+
+  // @ts-ignore // hehe
+  setPendingSignatures(prev => new Set(prev).add(tempSignature));
+  setActiveToast(tempSignature);
   
-  // Call the claim prize API
   const response = await fetch('/api/claim-prize', {
     method: 'POST',
     headers: {
@@ -233,6 +240,14 @@ export const executeClaimPrizeTxn = async(
   console.log("Successfully claimed prize!");
   console.log("Transaction signature:", signature);
   console.log(solanaurl);
+
+  // @ts-ignore // hehe
+  setPendingSignatures(prev => {
+    const newSet = new Set(prev);
+    newSet.delete(tempSignature);
+    return newSet;
+  });
+  setActiveToast(signature);
 
   return signature;
 }

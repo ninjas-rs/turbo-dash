@@ -30,11 +30,15 @@ interface ClaimModalProps {
   onClose: () => void;
   signer: Signer;
   connection: Connection;
+  setActiveToast: (signature: string) => void;
+  setToasts: (toasts: Set<string>) => void;
 }
 
 interface ClaimButtonProps {
   signer: Signer;
   connection: Connection;
+  setActiveToast: (signature: string) => void;
+  setToasts: (toasts: Set<string>) => void;
 }
 
 const formatAddress = (address: string): string => {
@@ -46,7 +50,7 @@ const formatScore = (score: number): string => {
   return score?.toLocaleString() || '0';
 };
 
-function ClaimModal({ isOpen, onClose, signer, connection }: ClaimModalProps): JSX.Element | null {
+function ClaimModal({ isOpen, onClose, signer, connection, setActiveToast, setToasts }: ClaimModalProps): JSX.Element | null {
     const { isActive } = useCapsuleStore();
     const [contests, setContests] = useState<Contest[]>([]);
     const [ethPrice, setEthPrice] = useState<number | null>(null);
@@ -62,7 +66,16 @@ function ClaimModal({ isOpen, onClose, signer, connection }: ClaimModalProps): J
           const data = await response.json();
           setEthPrice(await getEthPrice());
           if (data.success) {
-            setContests(data.data);
+            let finalContests = [];
+
+            for (let contest of data.data) {
+              if (contest.prizePool === 0) {
+                continue
+              }
+              finalContests.push(contest);
+            }
+
+            setContests(finalContests);
           }
         } catch (err) {
           setError('Failed to fetch contests');
@@ -80,7 +93,7 @@ function ClaimModal({ isOpen, onClose, signer, connection }: ClaimModalProps): J
     const handleClaim = async (contestId: number, contestPubKey: string): Promise<void> => {
       setLoadingContests(prev => ({ ...prev, [contestPubKey]: true }));
       try {
-        await executeClaimPrizeTxn(signer, connection, contestId, contestPubKey);
+        await executeClaimPrizeTxn(signer, connection, contestId, contestPubKey, setActiveToast, setToasts);
         setContests(prev => prev.filter(c => c.contestPubKey !== contestPubKey));
       } catch (err) {
         setError('Failed to claim prize');
@@ -185,7 +198,7 @@ function ClaimModal({ isOpen, onClose, signer, connection }: ClaimModalProps): J
     );
   }
 
-export function ClaimButton({ signer, connection }: ClaimButtonProps): JSX.Element | null {
+export function ClaimButton({ signer, connection, setActiveToast, setToasts }: ClaimButtonProps): JSX.Element | null {
   const { isActive } = useCapsuleStore();
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 
@@ -208,6 +221,8 @@ export function ClaimButton({ signer, connection }: ClaimButtonProps): JSX.Eleme
         onClose={() => setIsModalOpen(false)}
         signer={signer}
         connection={connection}
+        setActiveToast={setActiveToast}
+        setToasts={setToasts}
       />
     </>
   );
