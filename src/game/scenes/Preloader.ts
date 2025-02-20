@@ -29,7 +29,7 @@ export class Preloader extends Scene {
   preload() {
     //  Load the assets for the game - Replace with your own assets
     this.load.setPath("assets");
-
+    this.sound.setVolume(0.1);
     this.load.image("logo", "logo.svg");
     this.load.image("main_menu_bg", "main_menu_bg.svg");
     this.load.image("player", "player.png");
@@ -40,10 +40,10 @@ export class Preloader extends Scene {
     this.load.image("coffin", "coffin.png");
     this.load.image("grave_1", "grave_1.png");
     this.load.image("grave_2", "grave_2.png");
-
     this.load.audio("background_music", "background.mp3");
     this.load.audio("jump_sound", "jump.wav");
     this.load.audio("hit_sound", "hit.wav");
+    this.load.audio("game_over_sound", "game_over.mp3");
 
     this.createParticleTexture();
   }

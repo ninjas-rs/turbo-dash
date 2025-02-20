@@ -1,25 +1,35 @@
 import { Scene } from "phaser";
 import { EventBus } from "../event-bus";
 
+const speedIncrement = 20;
+const metersX = 10;
+const metersPerPixel = 0.02;
 const grassHeight = 96;
+
+type ExtendedObstacle = Phaser.Types.Physics.Arcade.ImageWithDynamicBody & {
+  obsType: string;
+  points: number;
+  passed: boolean;
+};
+
 const obstaclesConfig = {
   spacing: 1500,
   types: [
     {
       type: "coffin",
-      points: 4,
+      points: 1,
       y: 480,
       hitboxOffset: { width: 60, height: 80 },
     },
     {
       type: "grave_1",
-      points: 2,
+      points: 1,
       y: 480,
       hitboxOffset: { width: 40, height: 40 },
     },
     {
       type: "grave_2",
-      points: 2,
+      points: 1,
       y: 480,
       hitboxOffset: { width: 70, height: 40 },
     },
@@ -42,16 +52,19 @@ export class Game extends Scene {
   backgroundMusic!: Phaser.Sound.WebAudioSound;
   jumpSound!: Phaser.Sound.WebAudioSound;
   hitSound!: Phaser.Sound.WebAudioSound;
+  gameOverSound!: Phaser.Sound.WebAudioSound;
 
   // Misc
   spacebar!: Phaser.Input.Keyboard.Key;
   obstacleEvent!: Phaser.Time.TimerEvent;
   lastObstacleTime!: number;
+  lastDistanceUpdate!: number;
 
   // Dynamic
-  groundSpeed = 300;
-  playerSpeed = 300;
-  obstaclesSpeed = 300;
+  groundSpeed!: number;
+  playerSpeed!: number;
+  obstaclesSpeed!: number;
+  distance!: number; // in pixels
 
   constructor() {
     super("Game");
@@ -61,9 +74,27 @@ export class Game extends Scene {
     this.scene.pause();
   }
 
-  handleObstacleOverlap(
-    obstacle: Phaser.Types.Physics.Arcade.GameObjectWithBody,
-  ) {
+  handleDistanceUpdate() {
+    // Distance in meters
+    const distanceInMeters = Math.floor(this.distance * metersPerPixel);
+    if (distanceInMeters === this.lastDistanceUpdate) return;
+
+    // Increment score by 1 at each metersX
+    if (distanceInMeters % metersX === 0) {
+      this.events.emit("score-inc", 1);
+    }
+
+    // Speedup at each 5 * metersX
+    if (distanceInMeters % (5 * metersX) === 0) {
+      this.groundSpeed += speedIncrement;
+      this.playerSpeed += speedIncrement;
+      this.obstaclesSpeed += speedIncrement;
+    }
+
+    this.lastDistanceUpdate = distanceInMeters;
+  }
+
+  handleObstacleOverlap(obstacle: ExtendedObstacle) {
     this.events.emit("obstacle-hit");
     obstacle.destroy();
     this.player.setTexture("player_obstacle");
@@ -101,15 +132,17 @@ export class Game extends Scene {
     if (currentTime - this.lastObstacleTime < obstaclesConfig.spacing) return;
 
     const obstacleConf = Phaser.Math.RND.pick(obstaclesConfig.types);
-    const obstacle = this.obstacles.create(
+    const obstacle: ExtendedObstacle = this.obstacles.create(
       width,
       this.ground.y + (grassHeight - 24),
-      obstacleConf.type,
+      obstacleConf.type
     );
     obstacle.setScale(0.4, 0.4);
 
     obstacle.points = obstacleConf.points;
     obstacle.passed = false;
+    obstacle.obsType = obstacleConf.type;
+
     obstacle.body.setAllowGravity(false);
     obstacle.body.moves = false;
     obstacle.setPushable(false);
@@ -118,7 +151,7 @@ export class Game extends Scene {
 
     obstacle.body.setSize(
       obstacle.width - obstacleConf.hitboxOffset.width,
-      obstacle.height - obstacleConf.hitboxOffset.height,
+      obstacle.height - obstacleConf.hitboxOffset.height
     ); // make hitbox smaller than sprite
 
     this.lastObstacleTime = currentTime;
@@ -150,7 +183,7 @@ export class Game extends Scene {
       .setOrigin(0, 0);
 
     this.player = this.physics.add
-      .image(width / 2, height / 2, "player")
+      .image(width / 5.5, height / 2, "player")
       .setScale(0.5, 0.5);
 
     this.player.body.setSize(this.player.width - 20, this.player.height - 20); // make hitbox smaller than sprite
@@ -166,15 +199,13 @@ export class Game extends Scene {
     this.physics.add.collider(this.player, this.ground);
     this.obstacles = this.physics.add.group();
     this.physics.add.overlap(this.player, this.obstacles, (_, obstacle) =>
-      this.handleObstacleOverlap(
-        obstacle as Phaser.Types.Physics.Arcade.GameObjectWithBody,
-      ),
+      this.handleObstacleOverlap(obstacle as ExtendedObstacle)
     );
   }
 
   setupInputs() {
     this.spacebar = this.input.keyboard!.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE,
+      Phaser.Input.Keyboard.KeyCodes.SPACE
     );
   }
 
@@ -191,31 +222,49 @@ export class Game extends Scene {
   }
 
   setupEventsFromReact() {
-    this.events.on("pause", () => {
+    this.events.once("game-over", () => {
+      this.backgroundMusic.stop();
+      this.gameOverSound.play();
+
       this.scene.pause();
     });
 
-    this.events.on("resume", () => {
+    this.events.once("resume", () => {
       // we can have a backwards counter here maybe
+      // this.cleanup();
       this.scene.resume();
     });
 
-    this.events.on("restart", () => {
+    this.events.once("restart", () => {
+      this.cleanup();
       this.scene.restart();
+    });
+
+    this.events.once("back-to-main-menu", () => {
+      this.cleanup();
+      this.scene.start("MainMenu");
     });
   }
 
   setupSound() {
-    this.backgroundMusic = this.sound.add(
-      "background_music",
-    ) as Phaser.Sound.WebAudioSound;
+    this.backgroundMusic = this.sound.add("background_music", {
+      loop: true,
+    }) as Phaser.Sound.WebAudioSound;
     this.jumpSound = this.sound.add("jump_sound") as Phaser.Sound.WebAudioSound;
     this.hitSound = this.sound.add("hit_sound") as Phaser.Sound.WebAudioSound;
+    this.gameOverSound = this.sound.add(
+      "game_over_sound"
+    ) as Phaser.Sound.WebAudioSound;
 
     this.backgroundMusic.play();
   }
 
   create() {
+    this.groundSpeed = 300;
+    this.playerSpeed = 300;
+    this.obstaclesSpeed = 300;
+    this.distance = 0;
+
     this.setupObjects();
     this.setupColliders();
     this.setupSound();
@@ -240,7 +289,7 @@ export class Game extends Scene {
     this.player.x = Phaser.Math.Clamp(
       this.player.x,
       this.player.width * 2,
-      this.scale.width - this.player.width / 2,
+      this.scale.width - this.player.width / 2
     );
 
     // Controls
@@ -250,8 +299,15 @@ export class Game extends Scene {
 
     // Obstacles management
     this.obstacles.getChildren().forEach((obstacle) => {
-      const obs = obstacle as Phaser.Types.Physics.Arcade.ImageWithDynamicBody;
+      const obs = obstacle as ExtendedObstacle;
       obs.x -= this.obstaclesSpeed * (delta / 1000);
+
+      if (obs.x < this.player.x && !obs.passed) {
+        // this.events.emit("score-inc", obs.points);
+        this.events.emit("obstacle-passed", obs.points);
+
+        obs.passed = true;
+      }
 
       if (obs.x < -100) {
         obs.destroy(); // Clean up off-screen obstacles
@@ -262,11 +318,31 @@ export class Game extends Scene {
     if (this.player.body.touching.down) {
       this.skidEmitter.setPosition(
         this.player.x,
-        this.player.y + this.player.height / 4,
+        this.player.y + this.player.height / 4
       );
       this.skidEmitter.start();
     } else {
       this.skidEmitter.stop();
     }
+
+    // Update distance based on ground speed
+    this.distance += (this.groundSpeed / 1000) * delta;
+
+    this.handleDistanceUpdate();
+  }
+
+  cleanup() {
+    // Destroy sounds
+    this.backgroundMusic?.destroy();
+    this.jumpSound?.destroy();
+    this.hitSound?.destroy();
+
+    // Remove event listeners just in case
+    this.events.removeListener("restart");
+    this.events.removeListener("back-to-main-menu");
+  }
+
+  shutdown() {
+    this.cleanup();
   }
 }
