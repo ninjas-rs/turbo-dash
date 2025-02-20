@@ -162,7 +162,6 @@ export const fetchLatestContestId = async () => {
     const createdAt = new Date(parsed.createdAt);
     const now = new Date();
     const diff = now.getTime() - createdAt.getTime();
-    console.log("Diff:", diff);
     if (diff < 10 * 60 * 1000) {
       return parsed
     }

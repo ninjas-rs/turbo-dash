@@ -10,6 +10,7 @@ import { executeRefillLivesTxn, fetchLatestContestId } from "@/utils/transaction
 import { PublicKey, Transaction } from "@solana/web3.js";
 import TransactionCounter from "./counter";
 import TransactionToastQueue from "./toast";
+import { ChargeModal } from "./modals";
 
 const DEFAULT_LIVES = 3;
 
@@ -27,7 +28,8 @@ function DeathModal({
   setActiveToast,
   setPendingSignatures,
   setTransactionStats,
-  setSp
+  setSp,
+  setIsRechargeModalOpen
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -134,6 +136,16 @@ function DeathModal({
 
     } catch (error) {
       console.error("Error refilling lives:", error);
+      // if ("Transfer: insufficient lamports" in error) {
+      //   console.error("Insufficient funds for refill");
+      //   return
+      // }
+
+      if (error.toString().includes("Transfer: insufficient lamports")) {
+        setIsRechargeModalOpen(true);
+        return;
+      }
+
       // Clean up pending signature if error occurs
       setPendingSignatures(prev => {
         const next = new Set(prev);
@@ -322,6 +334,7 @@ export default function Game({ scene }) {
     pending: 0,
     completed: 0
   });
+  const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
 
   const { capsuleClient, initialize, connection } = useCapsule();
 
@@ -399,8 +412,15 @@ export default function Game({ scene }) {
         }));
 
       } catch (error) {
-        console.error("Error recording progress:", error);
-        // Clean up on error
+        console.log(error.toString());
+        if (error.toString().includes("Transaction results in an account (0) with insufficient funds for rent.")) {
+          console.error("Insufficient funds for rent");
+          setIsRechargeModalOpen(true);
+          scene.events.emit("game-over");
+          return;
+        }
+
+        // Clean up on errorx
         setPendingSignatures(prev => {
           const next = new Set(prev);
           next.delete(tempSignature);
@@ -522,6 +542,7 @@ export default function Game({ scene }) {
           setPendingSignatures={setPendingSignatures}
           setTransactionStats={setTransactionStats}
           setSp={setSp}
+          setIsRechargeModalOpen={setIsRechargeModalOpen}
         />
       </dialog>
 
@@ -561,6 +582,16 @@ export default function Game({ scene }) {
           </div>
         </div>
       </div>
+
+      {isRechargeModalOpen && (
+        <ChargeModal
+          onClose={() => {
+            setIsRechargeModalOpen(false);
+            window.location.href = "/";
+          }}
+          capsuleClient={capsuleClient}
+        />
+      )}
 
       <TransactionToastQueue
         activeSignature={activeToast}
