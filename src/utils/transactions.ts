@@ -187,7 +187,7 @@ interface RefillLivesParams {
 }
 
 export const executeClaimPrizeTxn = async(
-  signer: { address: PublicKeyInitData; sendTransaction: (arg0: Transaction, arg1: { skipPreflight: boolean; preflightCommitment: string; }) => any; },
+  signer: CapsuleSolanaWeb3Signer,
   connection: { confirmTransaction: (arg0: any) => any; },
   contestId: number,
   contestPubKey: string,

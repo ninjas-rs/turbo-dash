@@ -13,6 +13,7 @@ import { executeRefillLivesTxn, fetchLatestContestId, fetchPlayerState } from "@
 
 import Season from "./season";
 import TransactionToastQueue from "./toast";
+import ClaimButton from "./claim-button";
 
 // const Mock = [
 //   {
@@ -512,7 +513,9 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         </div>
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
           <WalletState text="Sign in to Play" capsuleClient={capsuleClient} initialize={initialize} />
+          {signer ? <ClaimButton connection={capsuleClient} signer={signer}/> : <></>}
         </div>
+
       </div>
 
       <div className="h-full flex mx-10 flex-row justify-between items-center">
