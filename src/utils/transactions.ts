@@ -154,6 +154,20 @@ export const fetchPlayerState = async (
 };
 
 export const fetchLatestContestId = async () => {
+  // check if we have the latest contest in localstorage
+  // added in the last 10 minutes
+  const latestContest = localStorage.getItem('latestContest');
+  if (latestContest) {
+    const parsed = JSON.parse(latestContest);
+    const createdAt = new Date(parsed.createdAt);
+    const now = new Date();
+    const diff = now.getTime() - createdAt.getTime();
+    console.log("Diff:", diff);
+    if (diff < 10 * 60 * 1000) {
+      return parsed
+    }
+  }
+
   try {
     const response = await fetch('/api/latest-contest');
     if (!response.ok) {
@@ -162,6 +176,11 @@ export const fetchLatestContestId = async () => {
     }
     
     const result = await response.json();
+
+    // store date in localstorage
+    result.createdAt = new Date().toISOString();
+    localStorage.setItem('latestContest', JSON.stringify(result));
+
     if (!result.data) {
       console.log("No contest data found");
       return null;
