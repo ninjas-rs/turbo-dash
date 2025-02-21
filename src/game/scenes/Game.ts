@@ -1,10 +1,16 @@
 import { Scene } from "phaser";
 import { EventBus } from "../event-bus";
 
-const speedIncrement = 20;
-const metersX = 10;
-const metersPerPixel = 0.02;
-const grassHeight = 96;
+const SPEED_INCREMENT = 10;
+const METERS_X = 10;
+const METERS_PER_PIXEL = 0.02;
+const GRASS_HEIGHT = 96;
+const DEFAULT_MIN_OBS_SPACING = 800;
+const DEFAULT_MAX_OBS_SPACING = 1500;
+const OBS_SPACE_DECREMENT = 20;
+const PLAYER_JUMP_X_DECREMENT = 5;
+const DEFAULT_PLAYER_JUMP_X = 200;
+const MIN_PLAYER_JUMP_X = 10;
 
 type ExtendedObstacle = Phaser.Types.Physics.Arcade.ImageWithDynamicBody & {
   obsType: string;
@@ -13,7 +19,6 @@ type ExtendedObstacle = Phaser.Types.Physics.Arcade.ImageWithDynamicBody & {
 };
 
 const obstaclesConfig = {
-  spacing: 1500,
   types: [
     {
       type: "coffin",
@@ -35,6 +40,12 @@ const obstaclesConfig = {
     },
   ],
 };
+
+const canDecrementRange = (min: number, max: number, decrement: number) =>
+  max - decrement >= min;
+
+const canDecrement = (value: number, decrement: number, min: number) =>
+  value - decrement >= min;
 
 export class Game extends Scene {
   // Game objects
@@ -65,6 +76,9 @@ export class Game extends Scene {
   playerSpeed!: number;
   obstaclesSpeed!: number;
   distance!: number; // in pixels
+  obstacleSpacingMin!: number; // in pixels
+  obstacleSpacingMax!: number; // in pixels
+  playerJumpX!: number; // in pixels
 
   constructor() {
     super("Game");
@@ -76,21 +90,45 @@ export class Game extends Scene {
 
   handleDistanceUpdate() {
     // Distance in meters
-    const distanceInMeters = Math.floor(this.distance * metersPerPixel);
+    const distanceInMeters = Math.floor(this.distance * METERS_PER_PIXEL);
     if (distanceInMeters === this.lastDistanceUpdate) return;
 
     // Increment score by 1 at each metersX
-    if (distanceInMeters % metersX === 0) {
+    if (distanceInMeters % METERS_X === 0) {
       this.events.emit("score-inc", 1);
     }
 
-    // Speedup at each 5 * metersX
-    if (distanceInMeters % (5 * metersX) === 0) {
-      this.groundSpeed += speedIncrement;
-      this.playerSpeed += speedIncrement;
-      this.obstaclesSpeed += speedIncrement;
+    // Each 5 * metersX
+    if (distanceInMeters % (5 * METERS_X) === 0) {
+      // Speedup
+      this.groundSpeed += SPEED_INCREMENT;
+      this.playerSpeed += SPEED_INCREMENT;
+      this.obstaclesSpeed += SPEED_INCREMENT;
+
+      // Decrement obstacle spacing at every 5 * METERS_X
+      if (
+        canDecrement(
+          this.obstacleSpacingMax,
+          OBS_SPACE_DECREMENT,
+          this.obstacleSpacingMin
+        )
+      ) {
+        this.obstacleSpacingMax -= OBS_SPACE_DECREMENT;
+      }
+
+      // Decrement player jump spread
+      if (
+        canDecrement(
+          this.playerJumpX,
+          PLAYER_JUMP_X_DECREMENT,
+          MIN_PLAYER_JUMP_X
+        )
+      ) {
+        this.playerJumpX -= PLAYER_JUMP_X_DECREMENT;
+      }
     }
 
+    // At last; update distance
     this.lastDistanceUpdate = distanceInMeters;
   }
 
@@ -110,7 +148,7 @@ export class Game extends Scene {
     if (this.player.body.touching.down) {
       this.player.setVelocityX(0);
       this.player.setVelocityY(-500);
-      this.player.setVelocityX(200);
+      this.player.setVelocityX(this.playerJumpX);
 
       this.tweens
         .add({
@@ -129,12 +167,16 @@ export class Game extends Scene {
     const { width } = this.scale;
 
     const currentTime = this.time.now;
-    if (currentTime - this.lastObstacleTime < obstaclesConfig.spacing) return;
+    const randomSpacing = Math.floor(
+      this.obstacleSpacingMin +
+        Math.random() * (this.obstacleSpacingMax - this.obstacleSpacingMin + 1)
+    );
+    if (currentTime - this.lastObstacleTime < randomSpacing) return;
 
     const obstacleConf = Phaser.Math.RND.pick(obstaclesConfig.types);
     const obstacle: ExtendedObstacle = this.obstacles.create(
       width,
-      this.ground.y + (grassHeight - 24),
+      this.ground.y + (GRASS_HEIGHT - 24),
       obstacleConf.type
     );
     obstacle.setScale(0.4, 0.4);
@@ -191,8 +233,8 @@ export class Game extends Scene {
     this.physics.add.existing(this.ground, true);
     this.player.setGravityY(1200);
 
-    this.ground.body.setSize(width, height / 3 - grassHeight);
-    this.ground.body.setOffset(0, grassHeight);
+    this.ground.body.setSize(width, height / 3 - GRASS_HEIGHT);
+    this.ground.body.setOffset(0, GRASS_HEIGHT);
   }
 
   setupColliders() {
@@ -264,6 +306,10 @@ export class Game extends Scene {
     this.playerSpeed = 300;
     this.obstaclesSpeed = 300;
     this.distance = 0;
+
+    this.obstacleSpacingMin = DEFAULT_MIN_OBS_SPACING;
+    this.obstacleSpacingMax = DEFAULT_MAX_OBS_SPACING;
+    this.playerJumpX = DEFAULT_PLAYER_JUMP_X;
 
     this.setupObjects();
     this.setupColliders();
