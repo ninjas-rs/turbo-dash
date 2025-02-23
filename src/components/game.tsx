@@ -6,7 +6,10 @@ import WalletState, { WalletModal } from "./wallet-state";
 import { BsArrowRight } from "react-icons/bs";
 import { useCapsule } from "@/hooks/useCapsule";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
-import { executeRefillLivesTxn, fetchLatestContestId } from "@/utils/transactions";
+import {
+  executeRefillLivesTxn,
+  fetchLatestContestId,
+} from "@/utils/transactions";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import TransactionCounter from "./counter";
 import TransactionToastQueue from "./toast";
@@ -29,7 +32,7 @@ function DeathModal({
   setPendingSignatures,
   setTransactionStats,
   setSp,
-  setIsRechargeModalOpen
+  setIsRechargeModalOpen,
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,7 +52,7 @@ function DeathModal({
   }
 
   const handleChargeClick = async (charge) => {
-    const tempSignature = 'pending-$' + charge;
+    const tempSignature = "pending-$" + charge;
     try {
       if (isProcessing || txnLock || isRestarting) {
         console.log("Transaction already in progress");
@@ -83,11 +86,11 @@ function DeathModal({
       // Reset transaction stats before starting new transaction
       setTransactionStats({
         pending: 1,
-        completed: 0
+        completed: 0,
       });
 
       // Create temporary signature for pending state
-      setPendingSignatures(prev => new Set(prev).add(tempSignature));
+      setPendingSignatures((prev) => new Set(prev).add(tempSignature));
       setActiveToast(tempSignature);
 
       // Fetch latest contest ID first
@@ -101,11 +104,11 @@ function DeathModal({
         signer,
         connection,
         charge,
-        true
+        true,
       );
 
       // Remove temporary signature
-      setPendingSignatures(prev => {
+      setPendingSignatures((prev) => {
         const next = new Set(prev);
         next.delete(tempSignature);
         return next;
@@ -115,25 +118,24 @@ function DeathModal({
       setActiveToast(signature);
 
       // Update transaction stats
-      if (!signature.startsWith('pending-')) {
+      if (!signature.startsWith("pending-")) {
         setTransactionStats({
           pending: 0,
-          completed: 1
+          completed: 1,
         });
       } else {
         setTransactionStats({
           pending: 0,
-          completed: 0
+          completed: 0,
         });
       }
 
       // Update game state
       // setSp(0); // Reset SP counter
-      
+
       setLives(makeLives(chargeMap[charge]));
       setDeathModalVisible(false);
       scene.events.emit("restart");
-
     } catch (error) {
       console.error("Error refilling lives:", error);
       // if ("Transfer: insufficient lamports" in error) {
@@ -147,12 +149,11 @@ function DeathModal({
       }
 
       // Clean up pending signature if error occurs
-      setPendingSignatures(prev => {
+      setPendingSignatures((prev) => {
         const next = new Set(prev);
         next.delete(tempSignature);
         return next;
       });
-
     } finally {
       setIsProcessing(false);
       setProcessingAmount(null);
@@ -160,7 +161,7 @@ function DeathModal({
       setTimeout(() => setTxnLock(false), 1000);
       setTransactionStats({
         pending: 0,
-        completed: 0
+        completed: 0,
       });
     }
   };
@@ -172,39 +173,39 @@ function DeathModal({
       // Reset transaction stats before starting new transaction
       setTransactionStats({
         pending: 1,
-        completed: 0
+        completed: 0,
       });
 
       // Reset SP to 0
       setSp(0);
 
-      const tempSignature = 'pending-' + 'restart';
-      setPendingSignatures(prev => new Set(prev).add(tempSignature));
+      const tempSignature = "pending-" + "restart";
+      setPendingSignatures((prev) => new Set(prev).add(tempSignature));
       setActiveToast(tempSignature);
 
       const signature = await executeRefillLivesTxn(
         signer,
         connection,
         0.0001,
-        false
+        false,
       );
 
-      setPendingSignatures(prev => {
+      setPendingSignatures((prev) => {
         const next = new Set(prev);
         next.delete(tempSignature);
         return next;
       });
       setActiveToast(signature);
 
-      if (!signature.startsWith('pending-')) {
+      if (!signature.startsWith("pending-")) {
         setTransactionStats({
           pending: 0,
-          completed: 1
+          completed: 1,
         });
       } else {
         setTransactionStats({
           pending: 0,
-          completed: 0
+          completed: 0,
         });
       }
 
@@ -217,7 +218,7 @@ function DeathModal({
       setIsRestarting(false);
       setTransactionStats({
         pending: 0,
-        completed: 0
+        completed: 0,
       });
     }
   };
@@ -235,7 +236,8 @@ function DeathModal({
     }
     return (
       <>
-        <p className="text-xl">{charge}$</p> ({lives} {lives === 1 ? 'life' : 'lives'})
+        <p className="text-xl">{charge}$</p> ({lives}{" "}
+        {lives === 1 ? "life" : "lives"})
       </>
     );
   };
@@ -253,9 +255,9 @@ function DeathModal({
             Game Over! (For now)
           </h2>
           <p className="pb-4">
-            You&apos;ve crossed paths with death herself, here on out you have two
-            choices, restart, or here go down the extra mile to get that high score
-            (trust me it&apos;s gonna be worth it in the end)
+            You&apos;ve crossed paths with death herself, here on out you have
+            two choices, restart, or here go down the extra mile to get that
+            high score (trust me it&apos;s gonna be worth it in the end)
           </p>
           <p className="text-center text-xl pb-3">get more lives</p>
           <div className="flex flex-row w-full pb-4 gap-2">
@@ -332,7 +334,7 @@ export default function Game({ scene }) {
   const pendingTransactionsRef = useRef(0);
   const [transactionStats, setTransactionStats] = useState({
     pending: 0,
-    completed: 0
+    completed: 0,
   });
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
 
@@ -362,11 +364,11 @@ export default function Game({ scene }) {
 
       try {
         // Add to pending first
-        setPendingSignatures(prev => new Set(prev).add(tempSignature));
+        setPendingSignatures((prev) => new Set(prev).add(tempSignature));
         setActiveToast(tempSignature);
-        setTransactionStats(prev => ({
+        setTransactionStats((prev) => ({
           ...prev,
-          pending: prev.pending + 1
+          pending: prev.pending + 1,
         }));
 
         const latestContest = await fetchLatestContestId();
@@ -374,9 +376,9 @@ export default function Game({ scene }) {
           throw new Error("No active contests found");
         }
 
-        const response = await fetch('/api/record-progress', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const response = await fetch("/api/record-progress", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userPubKey: signer.address,
             roundId: latestContest.data.contestId,
@@ -385,18 +387,18 @@ export default function Game({ scene }) {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to record progress');
+          throw new Error("Failed to record progress");
         }
 
         const { txn } = await response.json();
-        const transaction = Transaction.from(Buffer.from(txn, 'base64'));
+        const transaction = Transaction.from(Buffer.from(txn, "base64"));
         const signature = await signer.sendTransaction(transaction, {
           skipPreflight: false,
           preflightCommitment: "confirmed",
         });
 
         // Remove the temporary signature
-        setPendingSignatures(prev => {
+        setPendingSignatures((prev) => {
           const next = new Set(prev);
           next.delete(tempSignature);
           return next;
@@ -406,28 +408,33 @@ export default function Game({ scene }) {
         setActiveToast(signature);
 
         // Update transaction stats
-        setTransactionStats(prev => ({
+        setTransactionStats((prev) => ({
           pending: Math.max(0, prev.pending - 1),
-          completed: prev.completed + 1
+          completed: prev.completed + 1,
         }));
-
       } catch (error) {
         console.log(error.toString());
-        if (error.toString().includes("Transaction results in an account (0) with insufficient funds for rent.")) {
+        if (
+          error
+            .toString()
+            .includes(
+              "Transaction results in an account (0) with insufficient funds for rent.",
+            )
+        ) {
           setIsRechargeModalOpen(true);
           scene.events.emit("game-over");
           return;
         }
 
         // Clean up on errorx
-        setPendingSignatures(prev => {
+        setPendingSignatures((prev) => {
           const next = new Set(prev);
           next.delete(tempSignature);
           return next;
         });
-        setTransactionStats(prev => ({
+        setTransactionStats((prev) => ({
           ...prev,
-          pending: Math.max(0, prev.pending - 1)
+          pending: Math.max(0, prev.pending - 1),
         }));
       }
     };
@@ -439,32 +446,32 @@ export default function Game({ scene }) {
 
   const restartGame = async () => {
     try {
-      setTransactionStats(prev => ({
+      setTransactionStats((prev) => ({
         ...prev,
-        pending: prev.pending + 1
+        pending: prev.pending + 1,
       }));
 
-      const tempSignature = 'pending-restart';
-      setPendingSignatures(prev => new Set(prev).add(tempSignature));
+      const tempSignature = "pending-restart";
+      setPendingSignatures((prev) => new Set(prev).add(tempSignature));
       setActiveToast(tempSignature);
 
       let signature = await executeRefillLivesTxn(
         signer,
         connection,
         0.0001,
-        false
+        false,
       );
 
-      setPendingSignatures(prev => {
+      setPendingSignatures((prev) => {
         const next = new Set(prev);
         next.delete(tempSignature);
         return next;
       });
       setActiveToast(signature);
 
-      setTransactionStats(prev => ({
+      setTransactionStats((prev) => ({
         pending: prev.pending - 1,
-        completed: prev.completed + 1
+        completed: prev.completed + 1,
       }));
 
       setDeathModalVisible(false);
@@ -474,9 +481,9 @@ export default function Game({ scene }) {
       scene.events.emit("restart");
     } catch (error) {
       console.error("Error in restart game:", error);
-      setTransactionStats(prev => ({
+      setTransactionStats((prev) => ({
         ...prev,
-        pending: prev.pending - 1
+        pending: prev.pending - 1,
       }));
     }
   };
@@ -496,7 +503,10 @@ export default function Game({ scene }) {
 
   const handleObstacleHit = () => {
     console.log("Obstacle hit! Lives remaining:", lives);
-    console.log("Lives exhausted:", lives.every((life) => life.exhausted));
+    console.log(
+      "Lives exhausted:",
+      lives.every((life) => life.exhausted),
+    );
     if (lives.every((life) => life.exhausted)) {
       handleDeath();
       return;
@@ -506,8 +516,8 @@ export default function Game({ scene }) {
       prevLives.map((life, index) =>
         !life.exhausted && index === prevLives.findIndex((l) => !l.exhausted)
           ? { exhausted: true }
-          : life
-      )
+          : life,
+      ),
     );
   };
 
@@ -577,7 +587,10 @@ export default function Game({ scene }) {
             >
               {sp} SP
             </Card>
-            <WalletState capsuleClient={capsuleClient} initialize={initialize} />
+            <WalletState
+              capsuleClient={capsuleClient}
+              initialize={initialize}
+            />
           </div>
         </div>
       </div>

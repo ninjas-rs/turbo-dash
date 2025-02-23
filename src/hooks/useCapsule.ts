@@ -39,7 +39,7 @@ export const useCapsule = () => {
         setActive(isActive);
         return;
       }
-      
+
       setActive(isActive);
       if (isActive) {
         const wallets = await capsuleClient.getWallets();
@@ -54,11 +54,13 @@ export const useCapsule = () => {
           return;
         }
 
+        const wallet = Object.values(wallets)[0];
 
-
-        const wallet = Object.values(wallets)[0]
-
-        const signer = new CapsuleSolanaWeb3Signer(capsuleClient, connection, wallet.id);
+        const signer = new CapsuleSolanaWeb3Signer(
+          capsuleClient,
+          connection,
+          wallet.id,
+        );
         if (signer) setSigner(signer);
       }
 
@@ -88,8 +90,6 @@ export const useCapsule = () => {
 
     return () => clearInterval(interval);
   }, [isActive, fetchBalance]);
-
-  
 
   return {
     capsuleClient,

@@ -10,8 +10,7 @@ export class MainMenu extends Scene {
     super("MainMenu");
   }
 
-  init() {
-  }
+  init() {}
 
   create() {
     EventBus.emit("current-scene-ready", this);

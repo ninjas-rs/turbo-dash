@@ -49,15 +49,14 @@ export function WalletModal({
       className="pointer-events-auto"
     />
   );
-};
+}
 
 export default function WalletState({
   className,
   text,
   mainMenu,
   capsuleClient,
-  initialize
-
+  initialize,
 }: WalletStateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isActive, signer, balanceUsd, balance } = useCapsuleStore();
@@ -94,7 +93,13 @@ export default function WalletState({
             height={60}
           ></Image>
         </button>
-        {capsuleClient && <WalletModal isOpen={isModalOpen} onClose={handleModalClose} capsuleClient={capsuleClient} />}
+        {capsuleClient && (
+          <WalletModal
+            isOpen={isModalOpen}
+            onClose={handleModalClose}
+            capsuleClient={capsuleClient}
+          />
+        )}
       </>
     );
   }
@@ -130,7 +135,13 @@ export default function WalletState({
         )}
       </Button>
 
-      {capsuleClient && <WalletModal isOpen={isModalOpen} onClose={handleModalClose} capsuleClient={capsuleClient} />}
+      {capsuleClient && (
+        <WalletModal
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          capsuleClient={capsuleClient}
+        />
+      )}
     </>
   );
 }

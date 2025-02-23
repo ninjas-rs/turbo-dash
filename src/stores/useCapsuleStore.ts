@@ -1,7 +1,7 @@
-import { CapsuleSolanaWeb3Signer } from '@usecapsule/solana-web3.js-v1-integration';
-import { create } from 'zustand';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { getEthPrice } from '@/app/actions';
+import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
+import { create } from "zustand";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { getEthPrice } from "@/app/actions";
 
 interface CapsuleStore {
   isActive: boolean;
@@ -22,32 +22,32 @@ export const useCapsuleStore = create<CapsuleStore>((set, get) => ({
   setActive: (isActive) => set({ isActive }),
   setSigner: (signer) => set({ signer }),
   setBalance: (balance) => set({ balance }),
-  fetchBalance: async (rpcUrl = 'https://testnet.dev2.eclipsenetwork.xyz') => {
+  fetchBalance: async (rpcUrl = "https://testnet.dev2.eclipsenetwork.xyz") => {
     const signer = get().signer;
     if (!signer?.address) return;
 
     try {
-      const connection = new Connection(rpcUrl, 'confirmed');
+      const connection = new Connection(rpcUrl, "confirmed");
       const pubKey = new PublicKey(signer.address);
       const balance = await connection.getBalance(pubKey);
       const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(4);
-      
+
       const ethPrice = await getEthPrice();
       // const solPrice = await getSolPrice();
       const balanceUsd = ethPrice
         ? (Number(solBalance) * ethPrice).toFixed(2)
         : null;
 
-      set({ 
+      set({
         balance: solBalance,
-        balanceUsd
+        balanceUsd,
       });
     } catch (error) {
-      console.error('Error fetching balance:', error);
-      set({ 
+      console.error("Error fetching balance:", error);
+      set({
         balance: null,
-        balanceUsd: null
+        balanceUsd: null,
       });
     }
-  }
+  },
 }));

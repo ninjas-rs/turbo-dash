@@ -38,8 +38,8 @@ export const getContestAccount = (authority: PublicKey, contestId: number) => {
     [
       Buffer.from("contest"),
       authority.toBuffer(),
-      new BN(contestId).toArrayLike(Buffer, "le", 8)
+      new BN(contestId).toArrayLike(Buffer, "le", 8),
     ],
-    programId
+    programId,
   )[0];
 };

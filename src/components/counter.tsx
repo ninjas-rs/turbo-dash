@@ -1,7 +1,13 @@
-import React from 'react';
+import React from "react";
 import { Card } from "pixel-retroui";
 
-const TransactionCounter = ({ pendingCount, completedCount }: {pendingCount: number, completedCount: number}) => {
+const TransactionCounter = ({
+  pendingCount,
+  completedCount,
+}: {
+  pendingCount: number;
+  completedCount: number;
+}) => {
   return (
     <Card
       bg="#239B3F"

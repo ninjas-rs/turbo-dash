@@ -110,7 +110,7 @@ export class Game extends Scene {
         canDecrement(
           this.obstacleSpacingMax,
           OBS_SPACE_DECREMENT,
-          this.obstacleSpacingMin
+          this.obstacleSpacingMin,
         )
       ) {
         this.obstacleSpacingMax -= OBS_SPACE_DECREMENT;
@@ -121,7 +121,7 @@ export class Game extends Scene {
         canDecrement(
           this.playerJumpX,
           PLAYER_JUMP_X_DECREMENT,
-          MIN_PLAYER_JUMP_X
+          MIN_PLAYER_JUMP_X,
         )
       ) {
         this.playerJumpX -= PLAYER_JUMP_X_DECREMENT;
@@ -169,7 +169,7 @@ export class Game extends Scene {
     const currentTime = this.time.now;
     const randomSpacing = Math.floor(
       this.obstacleSpacingMin +
-        Math.random() * (this.obstacleSpacingMax - this.obstacleSpacingMin + 1)
+        Math.random() * (this.obstacleSpacingMax - this.obstacleSpacingMin + 1),
     );
     if (currentTime - this.lastObstacleTime < randomSpacing) return;
 
@@ -177,7 +177,7 @@ export class Game extends Scene {
     const obstacle: ExtendedObstacle = this.obstacles.create(
       width,
       this.ground.y + (GRASS_HEIGHT - 24),
-      obstacleConf.type
+      obstacleConf.type,
     );
     obstacle.setScale(0.4, 0.4);
 
@@ -193,7 +193,7 @@ export class Game extends Scene {
 
     obstacle.body.setSize(
       obstacle.width - obstacleConf.hitboxOffset.width,
-      obstacle.height - obstacleConf.hitboxOffset.height
+      obstacle.height - obstacleConf.hitboxOffset.height,
     ); // make hitbox smaller than sprite
 
     this.lastObstacleTime = currentTime;
@@ -241,13 +241,13 @@ export class Game extends Scene {
     this.physics.add.collider(this.player, this.ground);
     this.obstacles = this.physics.add.group();
     this.physics.add.overlap(this.player, this.obstacles, (_, obstacle) =>
-      this.handleObstacleOverlap(obstacle as ExtendedObstacle)
+      this.handleObstacleOverlap(obstacle as ExtendedObstacle),
     );
   }
 
   setupInputs() {
     this.spacebar = this.input.keyboard!.addKey(
-      Phaser.Input.Keyboard.KeyCodes.SPACE
+      Phaser.Input.Keyboard.KeyCodes.SPACE,
     );
   }
 
@@ -295,7 +295,7 @@ export class Game extends Scene {
     this.jumpSound = this.sound.add("jump_sound") as Phaser.Sound.WebAudioSound;
     this.hitSound = this.sound.add("hit_sound") as Phaser.Sound.WebAudioSound;
     this.gameOverSound = this.sound.add(
-      "game_over_sound"
+      "game_over_sound",
     ) as Phaser.Sound.WebAudioSound;
 
     this.backgroundMusic.play();
@@ -335,7 +335,7 @@ export class Game extends Scene {
     this.player.x = Phaser.Math.Clamp(
       this.player.x,
       this.player.width * 2,
-      this.scale.width - this.player.width / 2
+      this.scale.width - this.player.width / 2,
     );
 
     // Controls
@@ -364,7 +364,7 @@ export class Game extends Scene {
     if (this.player.body.touching.down) {
       this.skidEmitter.setPosition(
         this.player.x,
-        this.player.y + this.player.height / 4
+        this.player.y + this.player.height / 4,
       );
       this.skidEmitter.start();
     } else {

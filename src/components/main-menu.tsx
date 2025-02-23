@@ -7,9 +7,13 @@ import { useEffect, useRef, useState } from "react";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { useCapsule } from "@/hooks/useCapsule";
 
-import { PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { getPlayerStateAccount } from "@/utils/pdas";
-import { executeRefillLivesTxn, fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
+import {
+  executeRefillLivesTxn,
+  fetchLatestContestId,
+  fetchPlayerState,
+} from "@/utils/transactions";
 
 import Season from "./season";
 import TransactionToastQueue from "./toast";
@@ -43,23 +47,21 @@ import { ChargeModal, ContestEndedModal } from "./modals";
 //   },
 // ];
 
-const LoadingButton = ({ onClick, loading } : {
+const LoadingButton = ({
+  onClick,
+  loading,
+}: {
   onClick: () => void;
   loading: boolean;
 }) => {
   return (
     <div className="relative inline-block">
       <button
-        className={`bg-none pointer-events-auto transition-opacity duration-200 ${loading ? 'opacity-50' : ''}`}
+        className={`bg-none pointer-events-auto transition-opacity duration-200 ${loading ? "opacity-50" : ""}`}
         onClick={onClick}
         disabled={loading}
       >
-        <Image
-          src={"/assets/start.png"}
-          alt="start"
-          width={180}
-          height={60}
-        />
+        <Image src={"/assets/start.png"} alt="start" width={180} height={60} />
       </button>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -71,7 +73,7 @@ const LoadingButton = ({ onClick, loading } : {
 };
 
 const formatAddress = (address: string) => {
-  if (!address) return '';
+  if (!address) return "";
   return `${address.slice(0, 4)}...${address.slice(-4)}`;
 };
 
@@ -80,14 +82,16 @@ const formatScore = (score: number) => {
 };
 
 function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState<{
-    address: string;
-    score: number;
-  }[]>([
+  const [leaderboard, setLeaderboard] = useState<
+    {
+      address: string;
+      score: number;
+    }[]
+  >([
     {
       address: "",
       score: 0,
-    }
+    },
   ]);
 
   function fetchLeaderboard() {
@@ -134,8 +138,12 @@ function Leaderboard() {
               >
                 <div className="grid grid-cols-3 w-full items-center px-2">
                   <span className="text-left font-bold">#{index + 1}</span>
-                  <span className="text-center font-mono">{formatAddress(item.address)}</span>
-                  <span className="text-right tabular-nums">{formatScore(item.score)}</span>
+                  <span className="text-center font-mono">
+                    {formatAddress(item.address)}
+                  </span>
+                  <span className="text-right tabular-nums">
+                    {formatScore(item.score)}
+                  </span>
                 </div>
               </Card>
             );
@@ -166,7 +174,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
   useEffect(() => {
     // while the wallet is not connected, keep loading true
-    if (!isActive || (balanceUsd === null || balanceUsd === undefined)) {
+    if (!isActive || balanceUsd === null || balanceUsd === undefined) {
       setLoading(true);
     } else {
       setLoading(false);
@@ -189,37 +197,47 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       if (!latestContestId || !latestContest?.data?.endTime) {
         console.log("No active contests found");
         return {
-          "signature": signature,
-          "joined": false,
-        }
+          signature: signature,
+          joined: false,
+        };
       }
 
       if (latestContest?.data?.endTime < Date.now() / 1000) {
         console.log("Contest has ended");
         return {
-          "signature": signature,
-          "joined": false,
-        }
-      };
+          signature: signature,
+          joined: false,
+        };
+      }
 
-      const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
+      const playerState = await fetchPlayerState(
+        connection,
+        programId,
+        pubkey,
+        latestContestId,
+      );
 
       // if player is joining again with the current contest id,
       // just restart the game session.
       if (playerState) {
         console.log("Player has already joined the contest");
-        let signature = await executeRefillLivesTxn(signer, connection, 0.2, false);
+        let signature = await executeRefillLivesTxn(
+          signer,
+          connection,
+          0.2,
+          false,
+        );
         return {
-          "signature": signature,
-          "joined": true,
-        }
+          signature: signature,
+          joined: true,
+        };
       }
 
       // No player state found, join contest
-      const response = await fetch('/api/join-contest', {
-        method: 'POST',
+      const response = await fetch("/api/join-contest", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           playerPublicKey: pubkey.toBase58(),
@@ -228,14 +246,14 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Failed to get join transaction');
+        throw new Error(error.error || "Failed to get join transaction");
       }
 
       const { transaction: base64Transaction } = await response.json();
 
       // Deserialize and send transaction
       const transaction = Transaction.from(
-        Buffer.from(base64Transaction, 'base64')
+        Buffer.from(base64Transaction, "base64"),
       );
 
       signature = await signer.sendTransaction(transaction, {
@@ -247,15 +265,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
       console.log("Successfully joined contest!");
       console.log("Transaction signature:", signature);
-      console.log(
-        `View transaction: ${solanaUrl}`
-      );
+      console.log(`View transaction: ${solanaUrl}`);
 
       // Wait for transaction confirmation and fetch updated player state
       await connection.confirmTransaction(signature);
       // Mark as initialized after successful completion
       hasInitialized.current = true;
-
     } catch (error) {
       console.log("Error initializing player:", error);
       // Reset initialization flag on error so it can be retried
@@ -264,9 +279,9 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
     // return hasInitialized.current;
     return {
-      "signature": signature,
-      "joined": hasInitialized.current,
-    }
+      signature: signature,
+      joined: hasInitialized.current,
+    };
   };
 
   // At the top of your component:
@@ -274,8 +289,8 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
 
   const handleJoin = async () => {
     try {
-      const tempSignature = 'pending-joining';
-      
+      const tempSignature = "pending-joining";
+
       setLoading(true);
       console.log("Balance: ", balanceUsd);
 
@@ -320,7 +335,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       setPendingSignatures(new Set([tempSignature]));
       setActiveToast(tempSignature);
 
-      const playerState = await fetchPlayerState(connection, programId, pubkey, latestContestId);
+      const playerState = await fetchPlayerState(
+        connection,
+        programId,
+        pubkey,
+        latestContestId,
+      );
 
       // try {
       //   // If we get here, player has already joined
@@ -346,12 +366,12 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           const signature = status?.signature;
 
           if (signature) {
-            setPendingSignatures(prev => {
+            setPendingSignatures((prev) => {
               const newSet = new Set(prev);
-              newSet.delete(tempSignature);  // Remove temporary signature
+              newSet.delete(tempSignature); // Remove temporary signature
               return newSet;
             });
-            setActiveToast(signature);  // Set the actual signature
+            setActiveToast(signature); // Set the actual signature
           }
 
           if (joined) {
@@ -361,7 +381,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           }
         } catch (error) {
           console.log("Error joining contest:", error);
-          setPendingSignatures(prev => {
+          setPendingSignatures((prev) => {
             const newSet = new Set(prev);
             newSet.delete(tempSignature);
             return newSet;
@@ -399,7 +419,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         console.log("Player has already joined the contest");
         scene.scene.start("Game");
       }
-
     } catch (error) {
       console.log("Error in handleJoin:", error);
     } finally {
@@ -420,10 +439,22 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           />
         </div>
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
-          <WalletState text="Sign in to Play" capsuleClient={capsuleClient} initialize={initialize} />
-          {signer ? <ClaimButton connection={connection} signer={signer} setActiveToast={setActiveToast} setToasts={setPendingSignatures} /> : <></>}
+          <WalletState
+            text="Sign in to Play"
+            capsuleClient={capsuleClient}
+            initialize={initialize}
+          />
+          {signer ? (
+            <ClaimButton
+              connection={connection}
+              signer={signer}
+              setActiveToast={setActiveToast}
+              setToasts={setPendingSignatures}
+            />
+          ) : (
+            <></>
+          )}
         </div>
-
       </div>
 
       <div className="h-full flex mx-10 flex-row justify-between items-center">
@@ -432,7 +463,11 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           {isActive ? (
             <LoadingButton onClick={handleJoin} loading={loading} />
           ) : (
-            <WalletState mainMenu={true} capsuleClient={capsuleClient} initialize={initialize} />
+            <WalletState
+              mainMenu={true}
+              capsuleClient={capsuleClient}
+              initialize={initialize}
+            />
             // <></>
           )}
           <Image
@@ -446,9 +481,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
       </div>
 
       {isContestEndedModalOpen && (
-        <ContestEndedModal
-          onClose={() => setIsContestEndedModalOpen(false)}
-        />
+        <ContestEndedModal onClose={() => setIsContestEndedModalOpen(false)} />
       )}
 
       {isRechargeModalOpen && (
@@ -459,8 +492,8 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           capsuleClient={capsuleClient}
         />
       )}
-      <TransactionToastQueue 
-        activeSignature={activeToast} 
+      <TransactionToastQueue
+        activeSignature={activeToast}
         pendingSignatures={pendingSignatures}
       />
     </div>

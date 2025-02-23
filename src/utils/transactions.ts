@@ -1,23 +1,34 @@
 import { BN } from "@coral-xyz/anchor";
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, Connection, PublicKeyInitData } from "@solana/web3.js";
+import {
+  LAMPORTS_PER_SOL,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  Connection,
+  PublicKeyInitData,
+} from "@solana/web3.js";
 import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
-import { getContestAccount, getGlobalAccount, getRoundCounterAccount } from "./pdas";
+import {
+  getContestAccount,
+  getGlobalAccount,
+  getRoundCounterAccount,
+} from "./pdas";
 import { connection } from "next/server";
 import { getEthPrice } from "@/app/actions";
 
 /**
- * 
+ *
  * q. there is no need for lives to be on-chain right?
  * 1. if the player lives end locally, (also is there any way to manipulate lives on the frontend to cheat)
- * 
+ *
  * GAME FLOW
- * 
+ *
  * user signs in
  * user deposits 1$ to play the game (or more, that is a modal as well)
  *  - also for starters users need to just deposit 1$ which would give them 50 obstacles cross powers (.02 per obstacle) + .00016$ gas fees
- * 
+ *
  * user starts the game
- * 
+ *
  * 2. basically, for me this is how the life system should work
  * a. player starts with 3 lives
  * b. if the player hit obstacle, the player loses a life
@@ -25,21 +36,20 @@ import { getEthPrice } from "@/app/actions";
  * d. user can buy more lives that is one onchain transaction to refill lives
  * e. on success refill, game unpauses, with just updated lives, from the same spot, and the score also remains the same
  * - every extra life they buy is .2$  + .00016$ gas fees
- * 
- * 
- * other txns 
+ *
+ *
+ * other txns
  * txns also go for each obstacle hit, but since they take 4 seconds they are queued up (use multithreading here prolly)
- * 
- * 
- * from the contract - 
- * need the total value locked in pot for a season, 
- * current rank, for a particular addres, 
+ *
+ *
+ * from the contract -
+ * need the total value locked in pot for a season,
+ * current rank, for a particular addres,
  * season-end (need a seperate setter function as well)
- * 
+ *
  * also leaderboard that will update every hour let's say, with global season winners.
- * 
+ *
  */
-
 
 // export interface PlayerState {
 //   owner: PublicKey;
@@ -47,15 +57,14 @@ import { getEthPrice } from "@/app/actions";
 //   currentScore: number;
 // }
 
-
 /**
- * 
- * @param solanaSigner 
+ *
+ * @param solanaSigner
  * @returns demo txn function
- * 
+ *
  * FLOW:
- * 
- * use this on every obstacle passed 
+ *
+ * use this on every obstacle passed
  */
 
 const readI64FromBuffer = (buffer: Buffer, offset: number) => {
@@ -68,22 +77,25 @@ const readI64FromBuffer = (buffer: Buffer, offset: number) => {
 };
 
 const safeNumber = (bn: BN) => {
-  if (bn.gt(new BN(Number.MAX_SAFE_INTEGER)) || bn.lt(new BN(Number.MIN_SAFE_INTEGER))) {
+  if (
+    bn.gt(new BN(Number.MAX_SAFE_INTEGER)) ||
+    bn.lt(new BN(Number.MIN_SAFE_INTEGER))
+  ) {
     return bn.toString();
   }
   return bn.toNumber();
 };
 
-export const sendTestSolanaTransaction = async (solanaSigner: CapsuleSolanaWeb3Signer) => {
+export const sendTestSolanaTransaction = async (
+  solanaSigner: CapsuleSolanaWeb3Signer,
+) => {
   try {
     const transaction = new Transaction();
     transaction.feePayer = solanaSigner.sender!;
     transaction.add(
       SystemProgram.transfer({
         fromPubkey: solanaSigner.sender!,
-        toPubkey: new PublicKey(
-          "5mKstYSwoa5eMyLijKL42CL2k9ASMsTJ7sGApKNB477F",
-        ),
+        toPubkey: new PublicKey("5mKstYSwoa5eMyLijKL42CL2k9ASMsTJ7sGApKNB477F"),
         lamports: LAMPORTS_PER_SOL * 0.00001,
       }),
     );
@@ -110,22 +122,22 @@ export const fetchPlayerState = async (
   connection: Connection,
   programId: PublicKey,
   playerPubkey: PublicKey,
-  contestId: number
+  contestId: number,
 ) => {
   try {
     const [playerPDA] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("player"),
         playerPubkey.toBuffer(),
-        new BN(contestId).toArrayLike(Buffer, "le", 8)
+        new BN(contestId).toArrayLike(Buffer, "le", 8),
       ],
-      programId
+      programId,
     );
 
     console.log("Checking player state for:", {
       playerPubkey: playerPubkey.toString(),
       contestId,
-      playerPDA: playerPDA.toString()
+      playerPDA: playerPDA.toString(),
     });
 
     const playerAccount = await connection.getAccountInfo(playerPDA);
@@ -140,8 +152,8 @@ export const fetchPlayerState = async (
     const playerData = playerAccount.data;
     const data = {
       owner: new PublicKey(playerData.slice(8, 40)),
-      contestId: new BN(playerData.slice(40, 48), 'le').toNumber(),
-      currentScore: new BN(playerData.slice(48, 56), 'le').toNumber()
+      contestId: new BN(playerData.slice(40, 48), "le").toNumber(),
+      currentScore: new BN(playerData.slice(48, 56), "le").toNumber(),
     };
 
     console.log("Player state:", data);
@@ -156,29 +168,29 @@ export const fetchPlayerState = async (
 export const fetchLatestContestId = async () => {
   // check if we have the latest contest in localstorage
   // added in the last 10 minutes
-  const latestContest = localStorage.getItem('latestContest');
+  const latestContest = localStorage.getItem("latestContest");
   if (latestContest) {
     const parsed = JSON.parse(latestContest);
     const createdAt = new Date(parsed.createdAt);
     const now = new Date();
     const diff = now.getTime() - createdAt.getTime();
     if (diff < 10 * 60 * 1000) {
-      return parsed
+      return parsed;
     }
   }
 
   try {
-    const response = await fetch('/api/latest-contest');
+    const response = await fetch("/api/latest-contest");
     if (!response.ok) {
       console.log("Error fetching latest contest:", response.statusText);
       return null;
     }
-    
+
     const result = await response.json();
 
     // store date in localstorage
     result.createdAt = new Date().toISOString();
-    localStorage.setItem('latestContest', JSON.stringify(result));
+    localStorage.setItem("latestContest", JSON.stringify(result));
 
     if (!result.data) {
       console.log("No contest data found");
@@ -187,14 +199,13 @@ export const fetchLatestContestId = async () => {
 
     return {
       data: result.data,
-      contestPubKey: result.contestPubKey
+      contestPubKey: result.contestPubKey,
     };
   } catch (error) {
     console.log("Error fetching latest contest:", error);
     return null;
   }
 };
-
 
 interface RefillLivesParams {
   signer: { address: string; sendTransaction: Function };
@@ -204,9 +215,9 @@ interface RefillLivesParams {
   shouldContinue: boolean;
 }
 
-export const executeClaimPrizeTxn = async(
+export const executeClaimPrizeTxn = async (
   signer: CapsuleSolanaWeb3Signer,
-  connection: { confirmTransaction: (arg0: any) => any; },
+  connection: { confirmTransaction: (arg0: any) => any },
   contestId: number,
   contestPubKey: string,
   setActiveToast: (arg0: string) => any,
@@ -218,16 +229,16 @@ export const executeClaimPrizeTxn = async(
 
   const pubkey = new PublicKey(signer.address);
 
-  const tempSignature = 'pending-claim';
+  const tempSignature = "pending-claim";
 
   // @ts-ignore // hehe
-  setPendingSignatures(prev => new Set(prev).add(tempSignature));
+  setPendingSignatures((prev) => new Set(prev).add(tempSignature));
   setActiveToast(tempSignature);
-  
-  const response = await fetch('/api/claim-prize', {
-    method: 'POST',
+
+  const response = await fetch("/api/claim-prize", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       userPubKey: pubkey.toBase58(),
@@ -238,13 +249,15 @@ export const executeClaimPrizeTxn = async(
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to get claim prize transaction');
+    throw new Error(error.error || "Failed to get claim prize transaction");
   }
 
   const { txn: base64Transaction } = await response.json();
 
   // Deserialize and send transaction
-  const transaction = Transaction.from(Buffer.from(base64Transaction, 'base64'));
+  const transaction = Transaction.from(
+    Buffer.from(base64Transaction, "base64"),
+  );
   const signature = await signer.sendTransaction(transaction, {
     skipPreflight: false,
     preflightCommitment: "confirmed",
@@ -254,13 +267,13 @@ export const executeClaimPrizeTxn = async(
   await connection.confirmTransaction(signature);
 
   let solanaurl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
-  
+
   console.log("Successfully claimed prize!");
   console.log("Transaction signature:", signature);
   console.log(solanaurl);
 
   // @ts-ignore // hehe
-  setPendingSignatures(prev => {
+  setPendingSignatures((prev) => {
     const newSet = new Set(prev);
     newSet.delete(tempSignature);
     return newSet;
@@ -268,9 +281,9 @@ export const executeClaimPrizeTxn = async(
   setActiveToast(signature);
 
   return signature;
-}
+};
 
-export const executeRefillLivesTxn = async(
+export const executeRefillLivesTxn = async (
   signer: CapsuleSolanaWeb3Signer | null,
   connection: Connection,
   charge: number,
@@ -284,7 +297,7 @@ export const executeRefillLivesTxn = async(
 
   const pubkey = new PublicKey(signer.address);
   const latestContest = await fetchLatestContestId();
-  
+
   if (!latestContest?.data.contestId) {
     throw new Error("No active contests found");
   }
@@ -293,10 +306,10 @@ export const executeRefillLivesTxn = async(
   const chargeSol = charge / ethPrice;
 
   // Call the refill API
-  const response = await fetch('/api/refill-lives', {
-    method: 'POST',
+  const response = await fetch("/api/refill-lives", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       userPubKey: pubkey.toBase58(),
@@ -309,13 +322,15 @@ export const executeRefillLivesTxn = async(
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.error || 'Failed to get refill transaction');
+    throw new Error(error.error || "Failed to get refill transaction");
   }
 
   const { txn: base64Transaction } = await response.json();
 
   // Deserialize and send transaction
-  const transaction = Transaction.from(Buffer.from(base64Transaction, 'base64'));
+  const transaction = Transaction.from(
+    Buffer.from(base64Transaction, "base64"),
+  );
   const signature = await signer.sendTransaction(transaction, {
     skipPreflight: false,
     preflightCommitment: "confirmed",
@@ -325,12 +340,10 @@ export const executeRefillLivesTxn = async(
   await connection.confirmTransaction(signature);
 
   let solanaurl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
-  
+
   console.log("Successfully refilled lives!");
   console.log("Transaction signature:", signature);
-  console.log(
-    solanaurl,
-  );
+  console.log(solanaurl);
 
   return signature;
-}
+};

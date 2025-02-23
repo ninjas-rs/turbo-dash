@@ -3,9 +3,7 @@ import { BsArrowRight } from "react-icons/bs";
 import { Button, Card } from "pixel-retroui";
 import { WalletModal } from "./wallet-state";
 
-export function ContestEndedModal({ onClose }: {
-  onClose: () => void;
-}) {
+export function ContestEndedModal({ onClose }: { onClose: () => void }) {
   console.log("Contest ended modal");
 
   return (
@@ -16,11 +14,10 @@ export function ContestEndedModal({ onClose }: {
         shadowColor="#59b726"
         className="flex flex-col p-2 pointer-events-auto"
       >
-        <h2 className="z-50 text-2xl text-[#671919] mb-4">
-          Contest Ended!
-        </h2>
+        <h2 className="z-50 text-2xl text-[#671919] mb-4">Contest Ended!</h2>
         <p className="pb-4">
-          The current contest has ended. Please wait for the next contest to start!
+          The current contest has ended. Please wait for the next contest to
+          start!
         </p>
         <Button
           bg="transparent"
@@ -35,9 +32,13 @@ export function ContestEndedModal({ onClose }: {
   );
 }
 
-export function ChargeModal({ onClose, capsuleClient }
-  : { onClose: () => void; capsuleClient: any }
-) {
+export function ChargeModal({
+  onClose,
+  capsuleClient,
+}: {
+  onClose: () => void;
+  capsuleClient: any;
+}) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
 
   const handleChargeClick = () => {

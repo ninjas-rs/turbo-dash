@@ -72,10 +72,7 @@ export const POST = async (req: NextRequest) => {
 
     const allContests = await program.account.contestState.all();
     if (allContests.length === 0) {
-      return NextResponse.json(
-        { error: "No contests found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "No contests found" }, { status: 404 });
     }
 
     // assuming that we only have one contest
@@ -87,7 +84,7 @@ export const POST = async (req: NextRequest) => {
         latestContest = contest;
       }
     }
-    
+
     const playerStateKey = getPlayerStateAccount(
       new PublicKey(userPubKey),
       roundId as number,
@@ -139,10 +136,10 @@ export const POST = async (req: NextRequest) => {
       { status: 200 },
     );
   } catch (error) {
-    console.error('Error in POST handler:', error);
+    console.error("Error in POST handler:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 };

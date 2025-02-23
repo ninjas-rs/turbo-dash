@@ -9,7 +9,7 @@ export default function Preloader({ scene }: { scene: Phaser.Scene }) {
     if (progress == 100) {
       scene.scene.start("MainMenu");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [progress]);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function Preloader({ scene }: { scene: Phaser.Scene }) {
     return () => {
       scene.load.off("progress");
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

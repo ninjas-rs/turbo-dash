@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { BN } from '@coral-xyz/anchor';
-import PixelatedCard from './pixelated-card';
-import { getRoundCounterAccount, getGlobalAccount } from '@/utils/pdas';
-import { useCapsuleStore } from '@/stores/useCapsuleStore';
-import { fetchLatestContestId, fetchPlayerState } from '@/utils/transactions';
-import { getEthPrice } from '@/app/actions';
+import { useEffect, useState } from "react";
+import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { BN } from "@coral-xyz/anchor";
+import PixelatedCard from "./pixelated-card";
+import { getRoundCounterAccount, getGlobalAccount } from "@/utils/pdas";
+import { useCapsuleStore } from "@/stores/useCapsuleStore";
+import { fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
+import { getEthPrice } from "@/app/actions";
 
 interface ContestDetails {
   startTime: number;
@@ -35,7 +35,7 @@ const calculateTimeLeft = (endTime: number): TimeLeft => {
       hours: 0,
       minutes: 0,
       seconds: 0,
-      isExpired: true
+      isExpired: true,
     };
   }
 
@@ -44,12 +44,14 @@ const calculateTimeLeft = (endTime: number): TimeLeft => {
     hours: Math.floor((difference % 86400) / 3600),
     minutes: Math.floor((difference % 3600) / 60),
     seconds: Math.floor(difference % 60),
-    isExpired: false
+    isExpired: false,
   };
 };
 
 function Season() {
-  const [contestDetails, setContestDetails] = useState<ContestDetails | null>(null);
+  const [contestDetails, setContestDetails] = useState<ContestDetails | null>(
+    null,
+  );
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
   const { signer } = useCapsuleStore();
@@ -57,14 +59,16 @@ function Season() {
     owner: PublicKey;
     contestId: number;
     currentScore: number;
-} | null>(null);
+  } | null>(null);
 
   useEffect(() => {
     const fetchContestDetails = async () => {
       try {
         console.log("Fetching contest details...");
 
-        const connection = new Connection(process.env.NEXT_PUBLIC_RPC_ENDPOINT!);
+        const connection = new Connection(
+          process.env.NEXT_PUBLIC_RPC_ENDPOINT!,
+        );
         const programId = new PublicKey(process.env.NEXT_PUBLIC_PROGRAM_ID!);
 
         const counterPDA = getRoundCounterAccount();
@@ -77,8 +81,8 @@ function Season() {
         }
 
         const latestContest = await fetchLatestContestId();
-        const latestContestId = latestContest?.data.contestId; 
-        
+        const latestContestId = latestContest?.data.contestId;
+
         if (!latestContestId) {
           console.log("No contest found");
           setLoading(false);
@@ -99,9 +103,9 @@ function Season() {
           [
             Buffer.from("contest"),
             authority.toBuffer(),
-            new BN(latestContestId).toArrayLike(Buffer, "le", 8)
+            new BN(latestContestId).toArrayLike(Buffer, "le", 8),
           ],
-          programId
+          programId,
         );
 
         const contestAccount = await connection.getAccountInfo(contestPDA);
@@ -114,11 +118,12 @@ function Season() {
 
         const data = contestAccount.data;
         let details: ContestDetails = {
-          startTime: new BN(data.slice(48, 56), 'le').toNumber(),
-          endTime: new BN(data.slice(56, 64), 'le').toNumber(),
-          prizePool: new BN(data.slice(64, 72), 'le').toNumber() / LAMPORTS_PER_SOL,
-          highestScore: new BN(data.slice(72, 80), 'le').toNumber(),
-          totalParticipants: new BN(data.slice(144, 152), 'le').toNumber()
+          startTime: new BN(data.slice(48, 56), "le").toNumber(),
+          endTime: new BN(data.slice(56, 64), "le").toNumber(),
+          prizePool:
+            new BN(data.slice(64, 72), "le").toNumber() / LAMPORTS_PER_SOL,
+          highestScore: new BN(data.slice(72, 80), "le").toNumber(),
+          totalParticipants: new BN(data.slice(144, 152), "le").toNumber(),
         };
 
         // convert sol to usd
@@ -137,7 +142,7 @@ function Season() {
             connection,
             programId,
             pubKey,
-            latestContestId
+            latestContestId,
           );
 
           console.log("Player state:", playerState);
@@ -190,52 +195,60 @@ function Season() {
   }
 
   return (
-      <PixelatedCard>
-        <div className="flex flex-col items-center justify-center max-h-[90vh] overflow-y-auto p-4">
-          <h1 className="py-2 text-center">EARLY WINTER ARC</h1>
-          <p className="text-center">season ends in</p>
-          {timeLeft.isExpired ? (
-            <h2 className="text-3xl font-bold text-red-500">SEASON ENDED</h2>
-          ) : (
-            <div className="grid grid-cols-4 gap-2 text-center my-2 w-full max-w-xs">
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.days}</div>
-                <div className="text-xs sm:text-sm">days</div>
+    <PixelatedCard>
+      <div className="flex flex-col items-center justify-center max-h-[90vh] overflow-y-auto p-4">
+        <h1 className="py-2 text-center">EARLY WINTER ARC</h1>
+        <p className="text-center">season ends in</p>
+        {timeLeft.isExpired ? (
+          <h2 className="text-3xl font-bold text-red-500">SEASON ENDED</h2>
+        ) : (
+          <div className="grid grid-cols-4 gap-2 text-center my-2 w-full max-w-xs">
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold">
+                {timeLeft.days}
               </div>
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.hours.toString().padStart(2, '0')}</div>
-                <div className="text-xs sm:text-sm">hrs</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.minutes.toString().padStart(2, '0')}</div>
-                <div className="text-xs sm:text-sm">min</div>
-              </div>
-              <div>
-                <div className="text-2xl sm:text-3xl font-bold">{timeLeft.seconds.toString().padStart(2, '0')}</div>
-                <div className="text-xs sm:text-sm">sec</div>
-              </div>
+              <div className="text-xs sm:text-sm">days</div>
             </div>
-          )}
-          
-          <div className="mt-4 text-center">
-            <p>current score</p>
-            <h2 className="text-2xl sm:text-3xl text-bold">
-              {contestDetails.userScore !== undefined ?
-                `${contestDetails.userScore}` :
-                '0'}
-            </h2>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold">
+                {timeLeft.hours.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs sm:text-sm">hrs</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold">
+                {timeLeft.minutes.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs sm:text-sm">min</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold">
+                {timeLeft.seconds.toString().padStart(2, "0")}
+              </div>
+              <div className="text-xs sm:text-sm">sec</div>
+            </div>
           </div>
-  
-          <div className="mt-4 text-center">
-            <p>total rewards in pot</p>
-            <h2 className="text-2xl sm:text-3xl text-bold">
-              {contestDetails?.prizePoolUsd ? 
-                `$${contestDetails.prizePoolUsd.toFixed(5)}` : 
-                `${contestDetails.prizePool.toFixed(5)} SOL`}
-            </h2>
-          </div>
+        )}
+
+        <div className="mt-4 text-center">
+          <p>current score</p>
+          <h2 className="text-2xl sm:text-3xl text-bold">
+            {contestDetails.userScore !== undefined
+              ? `${contestDetails.userScore}`
+              : "0"}
+          </h2>
         </div>
-      </PixelatedCard>
+
+        <div className="mt-4 text-center">
+          <p>total rewards in pot</p>
+          <h2 className="text-2xl sm:text-3xl text-bold">
+            {contestDetails?.prizePoolUsd
+              ? `$${contestDetails.prizePoolUsd.toFixed(5)}`
+              : `${contestDetails.prizePool.toFixed(5)} SOL`}
+          </h2>
+        </div>
+      </div>
+    </PixelatedCard>
   );
 }
 
