@@ -19,6 +19,7 @@ import Season from "./season";
 import TransactionToastQueue from "./toast";
 import ClaimButton from "./claim-button";
 import { ChargeModal, ContestEndedModal } from "./modals";
+import Leaderboard from "./leaderboard";
 
 // const Mock = [
 //   {
@@ -71,97 +72,6 @@ const LoadingButton = ({
     </div>
   );
 };
-
-const formatAddress = (address: string) => {
-  if (!address) return "";
-  return `${address.slice(0, 4)}...${address.slice(-4)}`;
-};
-
-const formatScore = (score: number) => {
-  return score.toLocaleString();
-};
-
-function Leaderboard() {
-  const [leaderboard, setLeaderboard] = useState<
-    {
-      address: string;
-      score: number;
-    }[]
-  >([
-    {
-      address: "",
-      score: 0,
-    },
-  ]);
-
-  function fetchLeaderboard() {
-    fetch("/api/leaderboard")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.data && data.data.length > 0) {
-          setLeaderboard(data.data);
-        }
-      });
-  }
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, []);
-
-  return (
-    <PixelatedCard>
-      <div className="flex flex-col items-center w-[70%]">
-        <Card
-          textColor="black"
-          shadowColor="#59b726"
-          borderColor="#26541B"
-          bg="#239B3F"
-          className="!border-0 w-full mb-3 p-1 text-sm text-center"
-        >
-          <div className="grid grid-cols-3 w-full items-center px-2">
-            <h2 className="text-left">Rank</h2>
-            <h2>Address</h2>
-            <h2 className="text-right">Score</h2>
-          </div>
-        </Card>
-
-        <div className="flex flex-col space-y-2 w-full max-h-[60vh] overflow-y-auto">
-          {leaderboard.map((item, index) => {
-            return (
-              <Card
-                key={index}
-                bg="#239B3F"
-                textColor="black"
-                shadowColor="#59b726"
-                borderColor="#26541B"
-                className="w-[90%] mx-auto p-1 text-sm"
-              >
-                <div className="grid grid-cols-3 w-full items-center px-2">
-                  <span className="text-left font-bold">#{index + 1}</span>
-                  <span className="text-center font-mono">
-                    {formatAddress(item.address)}
-                  </span>
-                  <span className="text-right tabular-nums">
-                    {formatScore(item.score)}
-                  </span>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-row space-x-2 mt-4">
-          <Button bg="#59b726">
-            <BsArrowLeft />
-          </Button>
-          <Button bg="#59b726">
-            <BsArrowRight />
-          </Button>
-        </div>
-      </div>
-    </PixelatedCard>
-  );
-}
 
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const { isActive, balanceUsd, balance, signer } = useCapsuleStore();
