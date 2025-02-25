@@ -14,6 +14,7 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import TransactionCounter from "./counter";
 import TransactionToastQueue from "./toast";
 import { ChargeModal } from "./modals";
+import Image from "next/image";
 
 const DEFAULT_LIVES = 3;
 
@@ -557,8 +558,18 @@ export default function Game({ scene }) {
 
       <div className="h-full w-full flex flex-col p-8">
         <div className="flex flex-row justify-between">
-          <div className="flex flex-row space-x-8">
-            <div className="flex flex-row space-x-2 !h-[10px]">
+          <div className="flex flex-row">
+             {/* <Image
+                        src="/assets/logo.svg"
+                        className="pt-4"
+                        width={scene.scale.width / 4}
+                        height={scene.scale.height / 4}
+                        alt="Game Logo"
+                      /> */}
+          </div>
+
+          <div className="flex flex-row space-x-4">
+          <div className="flex flex-row space-x-2 pt-2 pr-4 !h-[10px]">
               {lives.map((life, idx) => (
                 <img
                   key={idx}
@@ -572,13 +583,6 @@ export default function Game({ scene }) {
                 />
               ))}
             </div>
-          </div>
-
-          <div className="flex flex-row space-x-4">
-            <TransactionCounter
-              pendingCount={transactionStats.pending}
-              completedCount={transactionStats.completed}
-            />
             <Card
               bg="#bdba25"
               borderColor="#59b726"

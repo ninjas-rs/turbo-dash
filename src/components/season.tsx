@@ -6,6 +6,8 @@ import { getRoundCounterAccount, getGlobalAccount } from "@/utils/pdas";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
 import { getEthPrice } from "@/app/actions";
+import ClaimButton from "./claim-button";
+import { useCapsule } from "@/hooks/useCapsule";
 
 interface ContestDetails {
   startTime: number;
@@ -48,13 +50,19 @@ const calculateTimeLeft = (endTime: number): TimeLeft => {
   };
 };
 
-function Season() {
+function Season(
+  { setActiveToast, setPendingSignatures }: {
+    setActiveToast: (signature: string) => void;
+    setPendingSignatures: (toasts: Set<string>) => void;
+  },
+) {
   const [contestDetails, setContestDetails] = useState<ContestDetails | null>(
     null,
   );
+    const { signer } = useCapsuleStore();
+    const {connection } = useCapsule();
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
-  const { signer } = useCapsuleStore();
   const [playerState, setPlayerState] = useState<{
     owner: PublicKey;
     contestId: number;
@@ -231,7 +239,15 @@ function Season() {
         )}
 
         <div className="mt-4 text-center">
-          <p>current score</p>
+          <p>current higest</p>
+          <h2 className="text-2xl sm:text-3xl text-bold">
+            {contestDetails.userScore !== undefined
+              ? `${contestDetails.userScore}`
+              : "0"}
+          </h2>
+        </div>
+        <div className="mt-4 text-center">
+          <p>season highest</p>
           <h2 className="text-2xl sm:text-3xl text-bold">
             {contestDetails.userScore !== undefined
               ? `${contestDetails.userScore}`
@@ -241,12 +257,22 @@ function Season() {
 
         <div className="mt-4 text-center">
           <p>total rewards in pot</p>
-          <h2 className="text-2xl sm:text-3xl text-bold">
+          <h2 className="text-2xl sm:text-3xl text-bold pb-6">
             {contestDetails?.prizePoolUsd
               ? `$${contestDetails.prizePoolUsd.toFixed(5)}`
               : `${contestDetails.prizePool.toFixed(5)} SOL`}
           </h2>
         </div>
+        {signer ? (
+                        <ClaimButton
+                          connection={connection}
+                          signer={signer}
+                          setActiveToast={setActiveToast}
+                          setToasts={setPendingSignatures}
+                        />
+                      ) : (
+                        <></>
+                      )}
       </div>
     </PixelatedCard>
   );

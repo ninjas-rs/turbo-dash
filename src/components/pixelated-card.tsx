@@ -13,7 +13,7 @@ const PixelatedCard = ({ children, className }: PixelatedCardProps) => {
   return (
     <div
       className={cn(
-        "h-full min-w-[28vw] pointer-events-auto flex flex-col items-center justify-center bg-no-repeat bg-contain bg-center relative",
+        "h-full min-w-[32vw] pointer-events-auto flex flex-col items-center justify-center bg-no-repeat bg-contain bg-center relative",
         className
       )}
       style={{

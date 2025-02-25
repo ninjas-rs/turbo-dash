@@ -62,7 +62,7 @@ const LoadingButton = ({
         onClick={onClick}
         disabled={loading}
       >
-        <Image src={"/assets/start.png"} alt="start" width={180} height={60} />
+        <Image src={"/assets/start.png"} alt="start" width={220} height={60} />
       </button>
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -252,20 +252,6 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         latestContestId,
       );
 
-      // try {
-      //   // If we get here, player has already joined
-      //   scene.scene.start("Game");
-      // } catch (error) {
-      //   // If player state doesn't exist, join the contest
-      //   console.log("Player hasn't joined yet, joining contest...");
-      //   const joined = await joinContest();
-      //   if (joined) {
-      //     scene.scene.start("Game");
-      //   } else {
-      //     console.log("Failed to join contest");
-      //   }
-      // }
-
       if (!playerState) {
         // player has not joined any contests yet
         console.log("Player hasn't joined yet, joining contest...");
@@ -354,22 +340,18 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
             capsuleClient={capsuleClient}
             initialize={initialize}
           />
-          {signer ? (
-            <ClaimButton
-              connection={connection}
-              signer={signer}
-              setActiveToast={setActiveToast}
-              setToasts={setPendingSignatures}
-            />
-          ) : (
-            <></>
-          )}
+
         </div>
       </div>
 
-      <div className="h-full flex mx-10 flex-row justify-between items-center">
-        <Leaderboard />
-        <div className="flex flex-col items-center justify-center space-y-8">
+      <div className="h-full w-[75vw] mx-auto flex flex-row justify-between items-center">
+        <div className="flex flex-row items-center justify-center space-x-8">
+        <Image
+            src={"/assets/player.png"}
+            alt="player"
+            width={109}
+            height={89}
+          />
           {isActive ? (
             <LoadingButton onClick={handleJoin} loading={loading} />
           ) : (
@@ -380,14 +362,9 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
             />
             // <></>
           )}
-          <Image
-            src={"/assets/player.png"}
-            alt="player"
-            width={109}
-            height={89}
-          />
+          
         </div>
-        <Season />
+        <Season setActiveToast={setActiveToast} setPendingSignatures={setPendingSignatures} />
       </div>
 
       {isContestEndedModalOpen && (

@@ -243,13 +243,13 @@ export function ClaimButton({
   return (
     <>
       <Button
-        bg="#255706"
+        bg="#239B3E"
         shadow="#234319"
-        borderColor="#59B726"
-        className="text-white pointer-events-auto"
+         borderColor="#"
+        className="text-black pointer-events-auto mb-4"
         onClick={() => setIsModalOpen(true)}
       >
-        Claim Winnings
+        Claim Past Winnings
       </Button>
 
       <ClaimModal

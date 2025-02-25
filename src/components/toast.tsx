@@ -35,14 +35,14 @@ const SingleToast = ({
         </p>
         {status !== "pending" && (
           <a
-            href={`https://explorer.solana.com/tx/${signature}?cluster=devnet`}
+            href={`https://explorer.dev.eclipsenetwork.xyz/tx/${signature}?cluster=testnet`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs text-green-700 underline hover:text-green-900 cursor-pointer"
             onClick={(e) => {
               e.preventDefault();
               window.open(
-                `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
+                `https://explorer.dev.eclipsenetwork.xyz/tx/${signature}?cluster=testnet`,
                 "_blank",
                 "noopener,noreferrer",
               );
@@ -111,7 +111,7 @@ const TransactionToastQueue = ({
   }, [pendingSignatures]);
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div className="fixed top-4 left-4 z-50">
       <div className="flex flex-col">
         {toasts.map((toast, index) => (
           <div
