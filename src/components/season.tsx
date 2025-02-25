@@ -5,7 +5,7 @@ import PixelatedCard from "./pixelated-card";
 import { getRoundCounterAccount, getGlobalAccount } from "@/utils/pdas";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { fetchLatestContestId, fetchPlayerState } from "@/utils/transactions";
-import { getEthPrice } from "@/app/actions";
+import { getEthPrice, getUserState } from "@/app/actions";
 import ClaimButton from "./claim-button";
 import { useCapsule } from "@/hooks/useCapsule";
 
@@ -64,10 +64,15 @@ function Season(
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [loading, setLoading] = useState(true);
   const [playerState, setPlayerState] = useState<{
-    owner: PublicKey;
+    owner: string;
     contestId: number;
     currentScore: number;
+    rank: number;
   } | null>(null);
+
+  useEffect(() => {
+    console.log("playerState: ", playerState);
+  }, [playerState]);
 
   useEffect(() => {
     const fetchContestDetails = async () => {
@@ -142,22 +147,31 @@ function Season(
           console.log("Error fetching ETH price");
         }
 
+        console.log("Contest details:", details);
+
         if (signer?.address) {
           console.log("Fetching player state for:", signer.address);
-          const pubKey = new PublicKey(signer?.address);
 
-          const playerState = await fetchPlayerState(
-            connection,
-            programId,
-            pubKey,
-            latestContestId,
-          );
+          const playerState = await getUserState(signer.address, latestContestId);
+          // const playerState = await fetchPlayerState(
+          //   connection,
+          //   programId,
+          //   pubKey,
+          //   latestContestId,
+          // );
 
           console.log("Player state:", playerState);
 
-          setPlayerState(playerState);
+          // console.log("Player state:", playerState);
+
+          setPlayerState({
+            owner: signer.address,
+            contestId: latestContestId,
+            currentScore: playerState?.score || 0,
+            rank: playerState?.rank || -1,
+          });
+
           console.log("Player state:", playerState);
-          details.userScore = playerState?.currentScore;
         }
 
         setContestDetails(details);
@@ -241,17 +255,23 @@ function Season(
         <div className="mt-4 text-center">
           <p>current higest</p>
           <h2 className="text-2xl sm:text-3xl text-bold">
-            {contestDetails.userScore !== undefined
+            {/* {contestDetails.userScore !== undefined
               ? `${contestDetails.userScore}`
-              : "0"}
+              : "0"} */}
+            {playerState?.currentScore}
           </h2>
         </div>
         <div className="mt-4 text-center">
           <p>season highest</p>
           <h2 className="text-2xl sm:text-3xl text-bold">
-            {contestDetails.userScore !== undefined
-              ? `${contestDetails.userScore}`
-              : "0"}
+            {contestDetails.highestScore}
+          </h2>          
+        </div>
+
+        <div className="mt-4 text-center">
+          <p>Your Rank</p>
+          <h2 className="text-2xl sm:text-3xl text-bold">
+            #{playerState?.rank !== -1 ? playerState?.rank : "N/A"}
           </h2>
         </div>
 
@@ -263,6 +283,7 @@ function Season(
               : `${contestDetails.prizePool.toFixed(5)} SOL`}
           </h2>
         </div>
+
         {signer ? (
                         <ClaimButton
                           connection={connection}

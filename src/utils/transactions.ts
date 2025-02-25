@@ -11,6 +11,7 @@ import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integrati
 import {
   getContestAccount,
   getGlobalAccount,
+  getPlayerStateAccount,
   getRoundCounterAccount,
 } from "./pdas";
 import { connection } from "next/server";
@@ -141,6 +142,7 @@ export const fetchPlayerState = async (
     });
 
     const playerAccount = await connection.getAccountInfo(playerPDA);
+    console.log("Player account:", playerAccount);
 
     if (!playerAccount) {
       console.log("No player state found for PDA:", playerPDA.toString());
