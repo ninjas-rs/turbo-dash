@@ -1,13 +1,13 @@
-import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
+import { ParaSolanaWeb3Signer } from "@getpara/solana-web3.js-v1-integration";
 import { create } from "zustand";
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { getEthPrice } from "@/app/actions";
 
 interface CapsuleStore {
   isActive: boolean;
-  signer: CapsuleSolanaWeb3Signer | null;
+  signer: ParaSolanaWeb3Signer | null;
   setActive: (isActive: boolean) => void;
-  setSigner: (signer: CapsuleSolanaWeb3Signer) => void;
+  setSigner: (signer: ParaSolanaWeb3Signer) => void;
   balance: string | null;
   balanceUsd: string | null;
   setBalance: (balance: string) => void;

@@ -41,14 +41,14 @@ function DeathModal({
   const [processingAmount, setProcessingAmount] = useState(null);
   const [isRestarting, setIsRestarting] = useState(false);
 
-  const { capsuleClient, initialize, connection } = useCapsule();
+  const { para, initialize, connection } = useCapsule();
   const { balanceUsd, signer } = useCapsuleStore();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  if (!capsuleClient) {
+  if (!para) {
     return null;
   }
 
@@ -318,7 +318,7 @@ function DeathModal({
         <WalletModal
           isOpen={isWalletOpen}
           onClose={handleWalletClose}
-          capsuleClient={capsuleClient}
+          para={para}
         />
       </Card>
     </div>
@@ -339,7 +339,7 @@ export default function Game({ scene }) {
   });
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
 
-  const { capsuleClient, initialize, connection } = useCapsule();
+  const { para, initialize, connection } = useCapsule();
 
   useEffect(() => {
     initialize();
@@ -592,7 +592,7 @@ export default function Game({ scene }) {
               {sp} SP
             </Card>
             <WalletState
-              capsuleClient={capsuleClient}
+              para={para}
               initialize={initialize}
             />
           </div>
@@ -605,7 +605,7 @@ export default function Game({ scene }) {
             setIsRechargeModalOpen(false);
             window.location.href = "/";
           }}
-          capsuleClient={capsuleClient}
+          para={para}
         />
       )}
 

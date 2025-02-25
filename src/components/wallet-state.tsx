@@ -1,10 +1,8 @@
 "use client";
 
 import { Button, Card } from "pixel-retroui";
-import { CapsuleModal, OAuthMethod } from "@usecapsule/react-sdk";
-import "@usecapsule/react-sdk/styles.css";
+import { ParaModal, OAuthMethod } from "@getpara/react-sdk";
 import { useState, useMemo, useEffect } from "react";
-import { useCapsule } from "@/hooks/useCapsule";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { LuWalletMinimal } from "react-icons/lu";
 import Image from "next/image";
@@ -13,22 +11,22 @@ type WalletStateProps = {
   className?: string;
   text?: string;
   mainMenu?: boolean;
-  capsuleClient: any;
+  para: any;
   initialize: () => void;
 };
 
 export function WalletModal({
   isOpen,
   onClose,
-  capsuleClient,
+  para,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  capsuleClient: any;
+  para: any;
 }) {
   return (
-    <CapsuleModal
-      capsule={capsuleClient}
+    <ParaModal
+      para={para}
       isOpen={isOpen}
       onClose={onClose}
       logo={"/assets/player.png"}
@@ -55,7 +53,7 @@ export default function WalletState({
   className,
   text,
   mainMenu,
-  capsuleClient,
+  para,
   initialize,
 }: WalletStateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -93,11 +91,11 @@ export default function WalletState({
             height={60}
           ></Image>
         </button>
-        {capsuleClient && (
+        {para && (
           <WalletModal
             isOpen={isModalOpen}
             onClose={handleModalClose}
-            capsuleClient={capsuleClient}
+            para={para}
           />
         )}
       </>
@@ -135,11 +133,11 @@ export default function WalletState({
         )}
       </Button>
 
-      {capsuleClient && (
+      {para && (
         <WalletModal
           isOpen={isModalOpen}
           onClose={handleModalClose}
-          capsuleClient={capsuleClient}
+          para={para}
         />
       )}
     </>

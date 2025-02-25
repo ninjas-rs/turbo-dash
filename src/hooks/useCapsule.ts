@@ -1,28 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
 import { Connection } from "@solana/web3.js";
-import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
+import { ParaSolanaWeb3Signer } from "@getpara/solana-web3.js-v1-integration";
 import { useCapsuleStore } from "@/stores/useCapsuleStore";
-import Capsule, { Environment } from "@usecapsule/react-sdk";
+import Capsule, { Environment } from "@getpara/react-sdk";
+import para from "@/client/para";
 
 export const useCapsule = () => {
   const { setActive, fetchBalance, setSigner, isActive } = useCapsuleStore();
-  const [wallets, setWallets] = useState<any>({});
+  const [ wallets, setWallets] = useState<any>({});
 
   useEffect(() => {
     console.log("Getting re-rendered");
   }, []);
 
-  const capsuleClient = new Capsule(
-    Environment.BETA,
-    process.env.NEXT_PUBLIC_CAPSULE_API_KEY!,
-  );
-
   const connection = new Connection("https://testnet.dev2.eclipsenetwork.xyz");
 
   const initializeSigner = useCallback(async () => {
     try {
-      const isActive = capsuleClient.isEmail;
-      const isLoggedIn = await capsuleClient.isFullyLoggedIn();
+      const isActive = para.isEmail;
+      const isLoggedIn = await para.isFullyLoggedIn();
       console.log("Is logged in", isLoggedIn);
       if (!isLoggedIn) {
         console.log("Not logged in");
@@ -31,7 +27,7 @@ export const useCapsule = () => {
       }
 
       if (!isActive) {
-        const wallets = await capsuleClient.getWallets();
+        const wallets = await para.getWallets();
         setWallets(wallets);
 
         console.log("No wallets found");
@@ -42,7 +38,7 @@ export const useCapsule = () => {
 
       setActive(isActive);
       if (isActive) {
-        const wallets = await capsuleClient.getWallets();
+        const wallets = await para.getWallets();
         console.log("Wallets", wallets);
         setWallets(wallets);
 
@@ -56,8 +52,8 @@ export const useCapsule = () => {
 
         const wallet = Object.values(wallets)[0];
 
-        const signer = new CapsuleSolanaWeb3Signer(
-          capsuleClient,
+        const signer = new ParaSolanaWeb3Signer(
+          para,
           connection,
           wallet.id,
         );
@@ -72,9 +68,9 @@ export const useCapsule = () => {
   }, [isActive]);
 
   useEffect(() => {
-    console.log("Capsule email", capsuleClient.isEmail, "setting active");
-    setActive(capsuleClient.isEmail);
-  }, [capsuleClient.isEmail, setActive]);
+    console.log("Capsule email", para.isEmail, "setting active");
+    setActive(para.isEmail);
+  }, [para.isEmail, setActive]);
 
   useEffect(() => {
     initializeSigner();
@@ -92,7 +88,7 @@ export const useCapsule = () => {
   }, [isActive, fetchBalance]);
 
   return {
-    capsuleClient,
+    para,
     initialize: initializeSigner,
     connection: connection,
   };

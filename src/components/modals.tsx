@@ -34,10 +34,10 @@ export function ContestEndedModal({ onClose }: { onClose: () => void }) {
 
 export function ChargeModal({
   onClose,
-  capsuleClient,
+  para,
 }: {
   onClose: () => void;
-  capsuleClient: any;
+  para: any;
 }) {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
 
@@ -89,7 +89,7 @@ export function ChargeModal({
       <WalletModal
         isOpen={isWalletOpen}
         onClose={handleWalletClose}
-        capsuleClient={capsuleClient}
+        para={para}
       />
     </>
   );

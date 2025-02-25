@@ -75,7 +75,7 @@ const LoadingButton = ({
 
 export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
   const { isActive, balanceUsd, balance, signer } = useCapsuleStore();
-  const { capsuleClient, initialize, connection } = useCapsule();
+  const { para, initialize, connection } = useCapsule();
   const [isRechargeModalOpen, setIsRechargeModalOpen] = useState(false);
   const [activeToast, setActiveToast] = useState<string | undefined>(undefined);
   const [pendingSignatures, setPendingSignatures] = useState(new Set<string>());
@@ -211,7 +211,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         return;
       }
 
-      if (!isActive || !capsuleClient || !signer?.address) {
+      if (!isActive || !para || !signer?.address) {
         console.log("Wallet not connected");
         return;
       }
@@ -337,7 +337,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
         <div className="flex flex-row items-center space-x-4 pointer-events-auto">
           <WalletState
             text="Sign in to Play"
-            capsuleClient={capsuleClient}
+            para={para}
             initialize={initialize}
           />
 
@@ -357,7 +357,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           ) : (
             <WalletState
               mainMenu={true}
-              capsuleClient={capsuleClient}
+              para={para}
               initialize={initialize}
             />
             // <></>
@@ -376,7 +376,7 @@ export default function MainMenu({ scene }: { scene: Phaser.Scene }) {
           onClose={() => {
             setIsRechargeModalOpen(false);
           }}
-          capsuleClient={capsuleClient}
+          para={para}
         />
       )}
       <TransactionToastQueue

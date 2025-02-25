@@ -7,7 +7,7 @@ import {
   Connection,
   PublicKeyInitData,
 } from "@solana/web3.js";
-import { CapsuleSolanaWeb3Signer } from "@usecapsule/solana-web3.js-v1-integration";
+import { ParaSolanaWeb3Signer } from "@getpara/solana-web3.js-v1-integration";
 import {
   getContestAccount,
   getGlobalAccount,
@@ -87,7 +87,7 @@ const safeNumber = (bn: BN) => {
 };
 
 export const sendTestSolanaTransaction = async (
-  solanaSigner: CapsuleSolanaWeb3Signer,
+  solanaSigner: ParaSolanaWeb3Signer,
 ) => {
   try {
     const transaction = new Transaction();
@@ -216,7 +216,7 @@ interface RefillLivesParams {
 }
 
 export const executeClaimPrizeTxn = async (
-  signer: CapsuleSolanaWeb3Signer,
+  signer: ParaSolanaWeb3Signer,
   connection: { confirmTransaction: (arg0: any) => any },
   contestId: number,
   contestPubKey: string,
@@ -284,7 +284,7 @@ export const executeClaimPrizeTxn = async (
 };
 
 export const executeRefillLivesTxn = async (
-  signer: CapsuleSolanaWeb3Signer | null,
+  signer: ParaSolanaWeb3Signer | null,
   connection: Connection,
   charge: number,
   shouldContinue: boolean,

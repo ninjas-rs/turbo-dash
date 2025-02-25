@@ -3,9 +3,9 @@ import { useCapsuleStore } from "@/stores/useCapsuleStore";
 import { Button } from "pixel-retroui";
 import { Card } from "pixel-retroui";
 import { BsArrowLeft, BsArrowRight } from "react-icons/bs";
-import { PublicKeyInitData, Connection, Transaction } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import { executeClaimPrizeTxn } from "@/utils/transactions";
-import { CapsuleSolanaWeb3Signer as Signer } from "@usecapsule/solana-web3.js-v1-integration";
+import { ParaSolanaWeb3Signer as Signer } from "@getpara/solana-web3.js-v1-integration";
 import { getEthPrice } from "@/app/actions";
 
 interface ContestLeader {
